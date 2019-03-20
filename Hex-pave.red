@@ -1,8 +1,8 @@
 Red [
-    Title:  "Hex-pave - a simulation of a puzzle by Carl Hoff"
+    Title: "Hex-pave - a simulation of a puzzle by Carl Hoff"
     Author: "Galen Ivanov"
     Date:   19-Mar-2019
-    needs:  'View
+    needs: 'View
 ]
 
 STEP: 29
@@ -70,19 +70,19 @@ rotate-hex: function [hex][hex: hex + 1 % 6]
 
 hex1:  make-hexagon hx1:  ["111111" [papaya] 0]
 hex2:  make-hexagon hx2:  ["211211" [sky]    0]
-hex3:  make-hexagon hx3:  ["121212" [olive]  1]
-hex4:  make-hexagon hx4:  ["311311" [wheat]  0]
-hex5:  make-hexagon hx5:  ["212212" [linen]  0]
-hex6:  make-hexagon hx6:  ["221312" [orange] 1]
+hex3:  make-hexagon hx3:  ["121212" [yello]  1]
+hex4:  make-hexagon hx4:  ["311311" [sky]  0]
+hex5:  make-hexagon hx5:  ["212212" [mint]  0]
+hex6:  make-hexagon hx6:  ["221312" [tanned] 1]
 hex7:  make-hexagon hx7:  ["321321" [pink]   1]
-hex8:  make-hexagon hx8:  ["131313" [gold]   0]
-hex9:  make-hexagon hx9:  ["222222" [tanned] 0] 
-hex10: make-hexagon hx10: ["132223" [orange] 0]
+hex8:  make-hexagon hx8:  ["131313" [yello]   0]
+hex9:  make-hexagon hx9:  ["222222" [papaya] 0] 
+hex10: make-hexagon hx10: ["132223" [tanned] 0]
 hex11: make-hexagon hx11: ["331331" [mint]   0]
-hex12: make-hexagon hx12: ["322322" [papaya] 0]
+hex12: make-hexagon hx12: ["322322" [sky] 0]
 hex13: make-hexagon hx13: ["232323" [yello]  1]
-hex14: make-hexagon hx14: ["323323" [sky]    0]
-hex15: make-hexagon hx15: ["333333" [beige]  1]
+hex14: make-hexagon hx14: ["323323" [mint]    0]
+hex15: make-hexagon hx15: ["333333" [papaya]  1]
 
 view-block: [ 
     title "Hex Pave"
@@ -98,6 +98,7 @@ append view-block collect[
     repeat n 15 [
         p: rejoin ["r" n]
         t: compose[(to word! p) offset]
+        rn: to path! compose [(to word! p) parent pane]
         n-draw: to path! compose [(to word! p) draw]
         hx: rejoin ["hx" n]
         hxn1: reduce [to word! hx 1]
@@ -107,15 +108,20 @@ append view-block collect[
         keep compose/deep [
             (r: to-set-word p) base 190x151 transparent loose 
             draw (to-get-word rejoin ["hex" n])
+            on-down [move find (rn) (to word! p) tail (rn)]
             on-up [(to-set-path t) snap (to-get-path t) STEP]
             on-alt-up [(to-set-path hxn3) rotate-hex (to-get-path hxn3)
+                       move find (rn) (to word! p) tail (rn)
                        clear (n-draw) append (n-draw) make-hexagon (to word! hx)
             ]
             on-mid-up [reverse (to-get-path hxn1)
+                       move find (rn) (to word! p) tail (rn)
                        clear (n-draw) append (n-draw) make-hexagon (to word! hx)
+                       
             ]            
        ]
     ]
+    
 ]
 
 view view-block
