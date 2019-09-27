@@ -6,8 +6,6 @@ Red[
 ]
 
 random/seed now
-W: 500
-H: 500
 
 buffer: make block! 5000
 board: make block! 10000
@@ -19,25 +17,18 @@ edges-str: make block! 1000
 labels: make block! 1000
 solution: make block! 1000
 
-columns: rows: 8
+W: 500
+size: 7
 rx: ry: 0
-dx: dy: W / 8
+dx: W / 8
 z: 2 ; ofsset from the topleft corner
 
 directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
 
 solved: false
 
-validate-size: function [ x y ][
-    x: to integer! x
-    y: to integer! y    
-    return either odd? x * y [ false ] [ true ]
-]
-
 draw-board: has [ a b r c offsx offsy ][
-    dx: W / columns
-    dy: H / rows
-    
+       
     num-font: make object! [
         name: "Verdana"
         size: 18
@@ -49,8 +40,8 @@ draw-board: has [ a b r c offsx offsy ][
         state: none
         parent: none
     ]
-    num-font/size: to 1 dy / 2.5
-    offsy: dy - num-font/size / 3
+    num-font/size: to 1 dx / 2.5
+    offsy: dx - num-font/size / 3
     
     clear buffer
  
@@ -58,25 +49,25 @@ draw-board: has [ a b r c offsx offsy ][
         ; the island itself
         if solved [ 
         keep [ pen teal fill-pen teal ]
-            repeat r rows [
-                repeat c columns [
-                    if board/:r/:c = 1 [keep compose [ box (as-pair c - 1 * dx + z r - 1 * dy + z)
-                                                           (as-pair c * dx + z r * dy + z)]]
+            repeat r size [
+                repeat c size [
+                    if board/:r/:c = 1 [keep compose [ box (as-pair c - 1 * dx + z r - 1 * dx + z)
+                                                           (as-pair c * dx + z r * dx + z)]]
                 ]
             ]
         ]
         ; dots
         keep [ pen black fill-pen black ]
-        repeat r rows [
-            repeat c columns [
-                keep compose [ box (as-pair c - 1 * dx - 2 + z  r - 1 * dy - 2 + z)
-                                   (as-pair c - 1 * dx + 2 + z  r - 1 * dy + 2 + z)
-                               box (as-pair c     * dx - 2 + z  r - 1 * dy - 2 + z)
-                                   (as-pair c     * dx + 2 + z  r - 1 * dy + 2 + z)
-                               box (as-pair c - 1 * dx - 2 + z  r     * dy - 2 + z)
-                                   (as-pair c - 1 * dx + 2 + z  r     * dy + 2 + z)
-                               box (as-pair c     * dx - 2 + z  r     * dy - 2 + z)
-                                   (as-pair c     * dx + 2 + z  r     * dy + 2 + z)                                      
+        repeat r size [
+            repeat c size [
+                keep compose [ box (as-pair c - 1 * dx - 2 + z  r - 1 * dx - 2 + z)
+                                   (as-pair c - 1 * dx + 2 + z  r - 1 * dx + 2 + z)
+                               box (as-pair c     * dx - 2 + z  r - 1 * dx - 2 + z)
+                                   (as-pair c     * dx + 2 + z  r - 1 * dx + 2 + z)
+                               box (as-pair c - 1 * dx - 2 + z  r     * dx - 2 + z)
+                                   (as-pair c - 1 * dx + 2 + z  r     * dx + 2 + z)
+                               box (as-pair c     * dx - 2 + z  r     * dx - 2 + z)
+                                   (as-pair c     * dx + 2 + z  r     * dx + 2 + z)                                      
                 ]
             ]
         ]
@@ -85,19 +76,17 @@ draw-board: has [ a b r c offsx offsy ][
         foreach [x y n] labels [
             n: to string! n
             offsx: dx - ( num-font/size * length? n ) / 2
-            keep compose [text (as-pair x - 1 * dx + offsx + z y - 1 * dy + offsy  + z) (n)] 
+            keep compose [text (as-pair x - 1 * dx + offsx + z y - 1 * dx + offsy  + z) (n)] 
         ]
         keep [ line-width 3 ] ; for the edges
     ] buffer
 ]
 
-get-the-loop: has [ x y border a b c d x1 y1 x2 y2 dx dy  ][
-    dx: W / columns
-    dy: H / rows
-    
+get-the-loop: has [ x y border a b c d x1 y1 x2 y2 ][
+
     collect/into [
-        repeat y rows [
-            repeat x columns [
+        repeat y size [
+            repeat x size [
                 if board/:y/:x = 1 [
                     line-block: copy [ line ]
                     foreach border difference "LURD" get-neighbours board x y 1 [
@@ -106,9 +95,9 @@ get-the-loop: has [ x y border a b c d x1 y1 x2 y2 dx dy  ][
                                                #"L" [0 0 0 1] 
                                                #"D" [0 1 1 1] ] border
                         x1: x + a - 1 * dx 
-                        y1: y + b - 1 * dy 
+                        y1: y + b - 1 * dx 
                         x2: x + c - 1 * dx 
-                        y2: y + d - 1 * dy 
+                        y2: y + d - 1 * dx 
                         keep form compose [ 
                             line (as-pair x1 + z y1 + z) (as-pair x2 + z y2 + z)
                         ]
@@ -124,8 +113,8 @@ get-neighbours: function [ brd x y state ][
         case/all [
             all [x > 1 attempt [brd/:y/(x - 1) = state]]  [ keep "L" ]
             all [y > 1 attempt [brd/(y - 1)/:x = state]]  [ keep "U" ]
-            all [x < columns attempt [brd/:y/(x + 1) = state]] [ keep "R" ]
-            all [y < rows attempt [brd/(y + 1)/:x = state]] [ keep "D" ]
+            all [x < size attempt [brd/:y/(x + 1) = state]] [ keep "R" ]
+            all [y < size attempt [brd/(y + 1)/:x = state]] [ keep "D" ]
         ]
     ]
 ]
@@ -155,8 +144,8 @@ count-cells: func [ x y dx dy /local n ][
 shuffle-board: has [ x-one y-one x-two y-two neighbours ] [
     
     until [
-        rx: random columns
-        ry: random rows
+        rx: random size
+        ry: random size
         neighbours: get-neighbours board rx ry 1
         all [ board/:ry/:rx = 1 any [ neighbours = "LR" neighbours = "UD" ] ]
     ]
@@ -190,8 +179,8 @@ shuffle-board: has [ x-one y-one x-two y-two neighbours ] [
 
 calc-dist: func [][
     collect/into [
-        repeat r rows [
-            repeat c columns [
+        repeat r size [
+            repeat c size [
                 dist: 0
                 if board/:r/:c = 1 [
                     LURD: get-neighbours board c r 1
@@ -213,8 +202,8 @@ draw-edge: func [
     /local x y x1 y1 x2 y2 a b c d
     line-block
 ] [
-    cell-coords: offset / (W / columns)
-    in-cell-offs: (absolute offset) % (W / columns)
+    cell-coords: offset / (W / size)
+    in-cell-offs: (absolute offset) % (W / size)
     x: in-cell-offs/x
     y: in-cell-offs/y
     
@@ -226,9 +215,9 @@ draw-edge: func [
                            6 [0 0 0 1] 
                            8 [0 1 1 1] ] edge
     x1: cell-coords/x + a * dx  + z
-    y1: cell-coords/y + b * dy  + z
+    y1: cell-coords/y + b * dx  + z
     x2: cell-coords/x + c * dx  + z
-    y2: cell-coords/y + d * dy  + z
+    y2: cell-coords/y + d * dx  + z
        
     append line-block reduce [ as-pair x1 y1 as-pair x2 y2 ]
     alter edges reduce [ line-block ]
@@ -239,33 +228,33 @@ draw-edge: func [
     if empty? difference solution edges-str [
         solved: true
         append clear canvas/draw append draw-board edges  ; to see the fill
-        wait 1
         view [
             title "Success!"
-            below right 
             text 200x25 font-size 14 "You solved it!" center
             button "Close" [ unview ]
         ]  
     ]
 ]
 
-init-board: func [ x y ][
+init-board: func [ x ][
+
     solved: false
-    columns: -1 + to integer! x
-    rows: -1 + to integer! y
+
+    size: -1 + to integer! x
+    dx: W / size
     
     clear head board
     
     collect/into [
-        repeat r rows [
+        repeat r size [
             keep/only collect [ 
-                repeat c columns [ keep 1 ]
+                repeat c size [ keep 1 ]
             ]
             ]
     ] board
     
-    repeat r rows / 2 [
-        repeat c columns - 1 [
+    repeat r size / 2 [
+        repeat c size - 1 [
             board/(r * 2)/(c + 1): 0
         ]
     ]
@@ -289,24 +278,29 @@ view compose [
         append clear canvas/draw draw-board
     ]
         
-    canvas: base (as-pair W + 6 H + 6) snow draw [] all-over
+    canvas: base (as-pair W + 6 W + 6) snow draw [] all-over
     on-up [ if not solved [draw-edge event/offset] ]
     
     below
-    text "width" w-field: field "8"
-    text "height" h-field: field "8"
-    go: button 80 "Start" [
-        either validate-size w-field/text h-field/text 
-        [
-            init-board w-field/text h-field/text
-            append clear canvas/draw draw-board
-        ] [
-            view [
-                title "Error!"
-                below right 
-                text 290x25 font-size 12 "At least one of the lengths must be even!"
-                button "Close" [ unview ]
-            ]                           
+    small: base 80 yello "Small" [
+        init-board 8
+        append clear canvas/draw draw-board
+    ]
+    medium: base 80 yello font-size 10 "Medium" [
+        init-board 12
+        append clear canvas/draw draw-board
+    ] 
+    large: base 80 yello font-size 12 "Large" [
+        init-board 16
+        append clear canvas/draw draw-board
+    ]
+    cancel: base 80 papaya "Cancel" 
+    pad 0x65
+    info: base 80 yello "Info" [
+        view [
+            title "About Island Alleys"
+            button "Close" [ unview ]
+           
         ]
     ]
- ]
+] 
