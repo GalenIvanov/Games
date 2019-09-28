@@ -23,6 +23,8 @@ rx: ry: 0
 dx: W / 8
 z: 2 ; ofsset from the topleft corner
 
+iter-n: make reactor! [idx: 0]
+
 directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
 
 solved: false
@@ -236,14 +238,22 @@ draw-edge: func [
     ]
 ]
 
-init-board: func [ x ][
+init-board: func [ x /local iter n ][
 
     solved: false
+    
+    ;medium/enabled?: false
 
     size: -1 + to integer! x
     dx: W / size
     
+    iter-n/idx: 0.0
+    
     clear head board
+    clear head solution
+    clear head edges
+    clear head edges-str
+    
     
     collect/into [
         repeat r size [
@@ -259,7 +269,14 @@ init-board: func [ x ][
         ]
     ]
     
-    loop r * c [ shuffle-board ]
+    iter: r * c
+    n: 0
+   
+    loop iter [ 
+        shuffle-board
+        n: n + 1
+        iter-n/idx: n / to float! iter
+    ]
     
     
     clear head labels
@@ -274,6 +291,7 @@ view compose [
     title "Island Alleys"
     
     on-create [ 
+        small/color: yello
         init-board 8 8 
         append clear canvas/draw draw-board
     ]
@@ -281,26 +299,32 @@ view compose [
     canvas: base (as-pair W + 6 W + 6) snow draw [] all-over
     on-up [ if not solved [draw-edge event/offset] ]
     
+    base 20x20 snow
+    
     below
-    small: base 80 yello "Small" [
+    small: button 80x80 font-size 14 "8x8" [
         init-board 8
         append clear canvas/draw draw-board
     ]
-    medium: base 80 yello font-size 10 "Medium" [
+    medium: button 80x80 font-size 14 "12x12" [
         init-board 12
         append clear canvas/draw draw-board
     ] 
-    large: base 80 yello font-size 12 "Large" [
+    large: button 80x80 font-size 14 "16x16" [
         init-board 16
         append clear canvas/draw draw-board
     ]
-    cancel: base 80 papaya "Cancel" 
-    pad 0x65
-    info: base 80 yello "Info" [
+    
+    info: button 80x80 font-size 14 "About" [
         view [
             title "About Island Alleys"
+            text {Connect the dots
+so that the resulting line...}
             button "Close" [ unview ]
            
         ]
     ]
+    
+    prog: progress 80x50 0% react [ prog/data: iter-n/idx ] 
+    cancel: button 80x80 font-size 14 "Close" [ unview ]
 ] 
