@@ -11,6 +11,6 @@ My implementation is a WIP. It need the following improvements:
   
 Island Alleys 
 -
-A logic puzzle invented by me. Connect the dots so that the resulting line goes through all the dots and forms a closed loop that do not touch/cross itself (Technically speaking this is a Hamiltonian cycle on a grid) The closed loop outlines an "island" with branching alleys and the width of the alleys is always 1 square.
-The numbers are placed in the island where 2 (just a right turn), 3 (T-junction) or 4 alleys (crossroad) intersect. Furthermore, the numbers indicate the total distance to the shore in the West/North/East/South directions.
+A logic puzzle invented by me. The objective is to connect horizontally and vertically adjacent dots by clicking between them so that the lines form a simple loop with no loose ends that goes through all the dots (so the line forms a Hamiltonian cycle on a grid).
+The lines of the loop enclose an island. The island is exactly one square wide at all places, that’s why and I call the paths “alleys”. Where 2 or more alleys meet at a right angle, there is always a number indicating the total distance from that square to the shores in all directions – East, West, North and South.
 
