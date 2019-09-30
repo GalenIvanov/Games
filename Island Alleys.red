@@ -313,7 +313,6 @@ of the entire island. No guessing is needed, only logic.^/^/
 Galen Ivanov, 2019
 }
             button "Close" [ unview ]
-           
         ]
     ]
     return below
