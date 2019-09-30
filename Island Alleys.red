@@ -5,8 +5,6 @@ Red[
     needs: 'View
 ]
 
-title-text: "Island Alleys"
-
 random/seed now
 
 buffer: make block! 5000
@@ -318,7 +316,6 @@ of the entire island. No guessing is needed, only logic.
 Galen Ivanov, 2019
 }
             button "Close" [ unview ]
-           
         ]
     ]
     return below
