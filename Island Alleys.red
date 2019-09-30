@@ -258,12 +258,11 @@ init-board: func [ x /local iter n ][
     ]
     
     iter: r * c
-    n: 0
-   
+    n: 0.0
     loop iter [ 
         shuffle-board
         n: n + 1
-        iter-n/idx: n / to float! iter
+        iter-n/idx: n / iter
     ]
     
     clear head labels
@@ -310,12 +309,11 @@ wide at all places, that’s why and I call the paths “alleys”. Where two
 or more alleys meet at a right angle, there is always a number indicating
 the total distance from that square to the shores in all directions: 
 East, West, North and South. Use these numbers to reconstruct the shape
-of the entire island. No guessing is needed, only logic.
-
-
+of the entire island. No guessing is needed, only logic.^/^/
 Galen Ivanov, 2019
 }
             button "Close" [ unview ]
+           
         ]
     ]
     return below
