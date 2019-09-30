@@ -231,6 +231,9 @@ draw-edge: func [
 ]
 
 init-board: func [ x /local iter n ][
+    
+    canvas/parent/text: append copy "Island Alleys " to string! to pair! x
+   
     solved: false
 
     size: -1 + to integer! x
@@ -283,17 +286,14 @@ view compose [
     below across
     
     small: btn "8x8" [
-        small/parent/text: (append "Island Alleys" " 8x8")
         init-board 8
         append clear canvas/draw draw-board
     ]
     medium: btn"12x12" [
-        medium/parent/text: (append "Island Alleys" " 12x12")
         init-board 12
         append clear canvas/draw draw-board
     ] 
     large: btn "16x16" [
-        large/parent/text: (append "Island Alleys" " 16x16")
         init-board 16
         append clear canvas/draw draw-board
     ]
@@ -309,8 +309,7 @@ wide at all places, that’s why and I call the paths “alleys”. Where two
 or more alleys meet at a right angle, there is always a number indicating
 the total distance from that square to the shores in all directions: 
 East, West, North and South. Use these numbers to reconstruct the shape
-of the entire island. No guessing is needed, only logic.^/^/
-Galen Ivanov, 2019
+of the entire island. No guessing is needed, only logic.^/^/Galen Ivanov, 2019
 }
             button "Close" [ unview ]
         ]
