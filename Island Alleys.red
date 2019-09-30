@@ -1,9 +1,11 @@
 Red[
     Title: "Island Alleys - a logic game"
     Author: "Galen Ivanov"
-    Start-date: 25-Sep-2019
+    Date: 30-Sep-2019
     needs: 'View
 ]
+
+title-text: "Island Alleys"
 
 random/seed now
 
@@ -50,7 +52,7 @@ draw-board: has [ a b r c offsx offsy ][
     collect/into [
         ; the island itself
         if solved [ 
-        keep [ pen teal fill-pen teal ]
+        keep [ pen beige fill-pen beige ]
             repeat r size [
                 repeat c size [
                     if board/:r/:c = 1 [keep compose [ box (as-pair c - 1 * dx + z r - 1 * dx + z)
@@ -85,7 +87,6 @@ draw-board: has [ a b r c offsx offsy ][
 ]
 
 get-the-loop: has [ x y border a b c d x1 y1 x2 y2 ][
-
     collect/into [
         repeat y size [
             repeat x size [
@@ -176,7 +177,6 @@ shuffle-board: has [ x-one y-one x-two y-two neighbours ] [
     new-pos: random/only next intersect free-cells-left free-cells-right
     
     board/(new-pos/2)/(new-pos/1): 1  ; update the board with the new selected cell
-
 ]
 
 calc-dist: func [][
@@ -191,7 +191,7 @@ calc-dist: func [][
                             dirs: select directions to-get-word dd
                             dist: dist + count-cells c r dirs/x dirs/y
                         ] 
-                        keep reduce [c r dist + 1 - length? LURD]
+                        keep reduce [c r dist - length? LURD]  ;;;;
                     ]
                 ]
             ]
@@ -226,15 +226,9 @@ draw-edge: func [
     alter edges-str form reduce [ line-block ]
     append clear canvas/draw append draw-board edges
     
-    
     if empty? difference solution edges-str [
         solved: true
-        append clear canvas/draw append draw-board edges  ; to see the fill
-        view [
-            title "Success!"
-            text 200x25 font-size 14 "You solved it!" center
-            button "Close" [ unview ]
-        ]  
+        append clear canvas/draw append draw-board edges  ; to see the island 
     ]
 ]
 
@@ -250,7 +244,6 @@ init-board: func [ x /local iter n ][
     clear head solution
     clear head edges
     clear head edges-str
-    
     
     collect/into [
         repeat r size [
@@ -282,7 +275,7 @@ init-board: func [ x /local iter n ][
 ]
 
 view compose [
-    title "Island Alleys"
+    title (append "Island Alleys" " 8x8")
     
     on-create [ 
         init-board 8
@@ -293,32 +286,44 @@ view compose [
     below across
     
     small: btn "8x8" [
+        small/parent/text: (append "Island Alleys" " 8x8")
         init-board 8
         append clear canvas/draw draw-board
     ]
     medium: btn"12x12" [
+        medium/parent/text: (append "Island Alleys" " 12x12")
         init-board 12
         append clear canvas/draw draw-board
     ] 
     large: btn "16x16" [
+        large/parent/text: (append "Island Alleys" " 16x16")
         init-board 16
         append clear canvas/draw draw-board
     ]
-    
-    info: btn "?" [
+    info: btn "About" [
         view [
             title "About Island Alleys"
-            text {Connect the dots
-so that the resulting line...}
+            text {The objective is to connect horizontally and vertically adjacent dots
+by clicking between them so that the lines form a simple loop - 
+with no loose ends - that goes through all the dots (technically speaking
+the line forms a Hamiltonian cycle on a grid).
+The lines of the loop enclose an island. The island is exactly one square
+wide at all places, that’s why and I call the paths “alleys”. Where two
+or more alleys meet at a right angle, there is always a number indicating
+the total distance from that square to the shores in all directions: 
+East, West, North and South. Use these numbers to reconstruct the shape
+of the entire island. No guessing is needed, only logic.
+
+
+Galen Ivanov, 2019
+}
             button "Close" [ unview ]
            
         ]
     ]
-    
     return below
     prog: progress 500x5 0% react [ prog/data: iter-n/idx ] 
     pad 0x10   
     canvas: base (as-pair W + 6 W + 6) snow draw [] all-over
     on-up [ if not solved [draw-edge event/offset] ]
-      
 ] 
