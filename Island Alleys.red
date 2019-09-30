@@ -232,7 +232,7 @@ draw-edge: func [
 
 init-board: func [ x /local iter n ][
     
-    canvas/parent/text: append copy "Island Alleys " to string! to pair! x
+    canvas/parent/text: append copy "Island Alleys " to pair! x
    
     solved: false
 
