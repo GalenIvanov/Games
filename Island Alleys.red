@@ -36,7 +36,7 @@ draw-board: has [ a b r c offsx offsy ][
         size: 18
         style: "bold"
         angle: 0
-        color: reblue - 10.20.30
+        color: white ; reblue - 10.20.30
         anti-alias?: true
         shadow: none
         state: none
@@ -50,7 +50,7 @@ draw-board: has [ a b r c offsx offsy ][
     collect/into [
         ; the island itself
         if solved [ 
-        keep [ pen beige fill-pen beige ]
+        keep [ pen gold fill-pen gold ]
             repeat r size [
                 repeat c size [
                     if board/:r/:c = 1 [keep compose [ box (as-pair c - 1 * dx + z r - 1 * dx + z)
@@ -59,7 +59,7 @@ draw-board: has [ a b r c offsx offsy ][
             ]
         ]
         ; dots
-        keep [ pen reblue fill-pen reblue ]
+        keep [ pen white fill-pen white ]
         repeat r size [
             repeat c size [
                 keep compose [ box (as-pair c - 1 * dx - 2 + z  r - 1 * dx - 2 + z)
