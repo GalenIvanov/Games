@@ -2,6 +2,7 @@
 
 Hex-Pave
 -
+<img src="Hex-Pave.png">
 Hex-pave is a puzzle invented by Carl Hoff. The goal is to arrange all of the tiles flat in the hexagonal tray.
 
 My implementation is a WIP. It need the following improvements:
