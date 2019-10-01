@@ -2,7 +2,7 @@ Red[
     Title: "Island Alleys - a logic game"
     Author: "Galen Ivanov"
     Date: 30-Sep-2019
-    needs: 'View
+    needs: View
 ]
 
 random/seed now
@@ -36,7 +36,7 @@ draw-board: has [ a b r c offsx offsy ][
         size: 18
         style: "bold"
         angle: 0
-        color: black
+        color: reblue - 10.20.30
         anti-alias?: true
         shadow: none
         state: none
@@ -59,7 +59,7 @@ draw-board: has [ a b r c offsx offsy ][
             ]
         ]
         ; dots
-        keep [ pen black fill-pen black ]
+        keep [ pen reblue fill-pen reblue ]
         repeat r size [
             repeat c size [
                 keep compose [ box (as-pair c - 1 * dx - 2 + z  r - 1 * dx - 2 + z)
@@ -230,9 +230,11 @@ draw-edge: func [
     ]
 ]
 
-init-board: func [ x /local iter n ][
-    
+init-board: func [ x /local iter n t][
+    canvas/parent/color: aqua + 10.20.30
     canvas/parent/text: append copy "Island Alleys " to pair! x
+
+    random/seed either empty? t: seed-field/text[now][to integer! t]
    
     solved: false
 
@@ -276,13 +278,15 @@ init-board: func [ x /local iter n ][
 
 view compose [
     title (append "Island Alleys" " 8x8")
-    
+
     on-create [ 
         init-board 8
         append clear canvas/draw draw-board
     ]
     
-    style btn: button 115x45 font-size 12
+    seed-field: field 90x30 font-size 12 hint "#"
+    
+    style btn: button 90x30 font-size 12
     below across
     
     small: btn "8x8" [
@@ -309,7 +313,9 @@ wide at all places, that’s why and I call the paths “alleys”. Where two
 or more alleys meet at a right angle, there is always a number indicating
 the total distance from that square to the shores in all directions: 
 East, West, North and South. Use these numbers to reconstruct the shape
-of the entire island. No guessing is needed, only logic.^/^/Galen Ivanov, 2019
+of the entire island. No guessing is needed, only logic.
+A random game is chosen if no number is entered in the field, otherwise
+the number indicates the game number.^/^/Galen Ivanov, 2019
 }
             button "Close" [ unview ]
         ]
@@ -317,6 +323,6 @@ of the entire island. No guessing is needed, only logic.^/^/Galen Ivanov, 2019
     return below
     prog: progress 500x5 0% react [ prog/data: iter-n/idx ] 
     pad 0x10   
-    canvas: base (as-pair W + 6 W + 6) snow draw [] all-over
+    canvas: base (as-pair W + 6 W + 6) (aqua + 10.20.30) draw [] all-over
     on-up [ if not solved [draw-edge event/offset] ]
 ] 
