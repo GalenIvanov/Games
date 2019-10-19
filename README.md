@@ -16,5 +16,5 @@ Island Alleys
 
 A logic puzzle invented by me. The objective is to connect horizontally and vertically adjacent dots by clicking between them so that the lines form a simple loop with no loose ends that goes through all the dots (so the line forms a Hamiltonian cycle on a grid).
 The lines of the loop enclose an island. The island is exactly one square wide at all places, that’s why and I call the paths “alleys”. Where 2 or more alleys meet at a right angle, there is always a number indicating the total distance from that square to the shores in all directions – East, West, North and South.
-[Detailed solving isntructions](https://github.com/GalenIvanov/Games/blob/master/Island%20Alleys%20-%20solving%20instructions.pdf)
+[Detailed solving instructions](https://github.com/GalenIvanov/Games/blob/master/Island%20Alleys%20-%20solving%20instructions.pdf)
 
