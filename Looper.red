@@ -34,10 +34,11 @@ start-border: 0
 iter-n: make reactor! [idx: 0]
 
 directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
-
 seg-coords: copy [5x5 280x5 560x5 5x280 560x280 5x560 280x560 560x560]
 
 solved: false
+
+drag-seg: ""
 
 draw-board: has [ a b r c offsx offsy ][
        
@@ -161,16 +162,17 @@ cut-segments: func [
             forall angs [
                 ang: ang + angs/1
                 x: x + (dx * cosine ang)
-                if x < minx [minx: x]
-                if x > maxx [maxx: x]
+                minx: min minx x
+                maxx: max maxx x
                 
                 y: y - (dx * sine ang) 
-                if y < miny [miny: y]
-                if y > maxy [maxy: y]
+                miny: min miny y
+                maxy: max maxy y
+               
                 keep as-pair x y
             ] 
-            append ofs as-pair (size + 1) / 2 - (absolute (maxx - minx) / 2.0) - minx
-                               (size + 1) / 2 - (absolute (maxy - miny) / 2.0) - miny          
+            append ofs as-pair (size + 1) / 2.0 - (absolute (maxx - minx) / 2.0) - minx
+                               (size + 1) / 2.0 - (absolute (maxy - miny) / 2.0) - miny          
             
         ]
     ] segs
@@ -390,24 +392,26 @@ init-board: func [ x /local iter n t][
     get-the-loop
 ]
 
-update-seg: func [ofs /local found n][
+locate-seg: func [ofs /local n][
     found: off
     n: 1
     foreach segment seg-zones [
          foreach [a b] segment[
             if all [ a/x <= ofs/x b/x >= ofs/x a/y <= ofs/y b/y >= ofs/y ] [
-                found: on
-                break
+                stat/color: green
+                stat/text: rejoin ["seg" n]
+                drag-seg: stat/text   
+                return drag-seg
             ]
-        ]
-        if found [
-            stat/color: green
-            stat/text: rejoin ["seg" n]
-            break
         ]
         n: n + 1
     ]
-    if not found [stat/color: red stat/text: ""]
+    stat/color: red
+    stat/text: ""
+]
+
+move-seg: func [seg /local n][
+    
 ]
 
 view compose [
@@ -443,7 +447,10 @@ that covers all the dots. ^/^/Galen Ivanov, 2019
         
     canvas: base (as-pair AW + 4 AW + 4) (beige - 0.10.20) draw [] all-over
     ;on-up [ ]
-    on-over [update-seg event/offset]
+    ;on-over [locate-seg event/offset]
+    on-down [locate-seg event/offset]
+    on-drag [move-seg drag-seg]
+    
 
     across    
     text (beige - 0.10.20) "Galen Ivanov 2020"
