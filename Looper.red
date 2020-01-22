@@ -146,7 +146,7 @@ cut-segments: func [
     seg
     /local ang angs n x y minx maxx miny maxy ofs start p1 p2
 ][
-
+    print seg 
     clear segs
     clear seg-zones
     ofs: clear []
@@ -182,11 +182,12 @@ cut-segments: func [
     ] segs
     
     repeat n size + 1 [
-        seg-coords/:n: size + 2 / 2.0 * dx + seg-coords/:n + ofs/:n
+        seg-coords/:n: (round/to size + 2 / 2.0 * dx + seg-coords/:n + ofs/:n dx) + adj
+        
     ]
     
     start: next find/tail segs 'seg1
-    repeat n size + 1 [                     ; segments
+    repeat n size + 1 [                 ; segments
         loop size + 2 [                 ; lines in the segment  
             start/1: start/1 + seg-coords/:n
             start: next start
@@ -363,7 +364,10 @@ init-board: func [ x /local iter n t][
     iter-n/idx: 0.0
 
     seg-coords: copy [5x5 255x5 505x5 5x250 505x255 5x505 255x505 505x505]
+   ; print seg-coords
     forall seg-coords [seg-coords/1: (round/to seg-coords/1 dx) + adj ]
+   ; print seg-coords
+    
     
     canvas/parent/color: beige - 0.10.20
     canvas/parent/text: append copy "Loop-it " to pair! x
