@@ -1,4 +1,3 @@
-
 Red[
     Title: "Loop-thru - a logic game"
     Author: "Galen Ivanov"
@@ -28,7 +27,8 @@ W: 220     ; size of the grid in pixels
 size: 7    ; size of the grid - rows and columns - boxes, not points!
 rx: ry: 0
 dx: 0 
-z: AW - W / 2       ; ofsset from the topleft corner of the active area
+z: AW - W / 2       ; ofsset from the topleft corner of the active area to the dots area
+adj: 0x0
 
 start-border: 0
 
@@ -176,6 +176,7 @@ cut-segments: func [
             ] 
             append ofs as-pair (size + 1) / 2.0 - (absolute (maxx - minx) / 2.0) - minx
                                (size + 1) / 2.0 - (absolute (maxy - miny) / 2.0) - miny          
+                               
             
         ]
     ] segs
@@ -353,20 +354,23 @@ shuffle-board: has [ x-one y-one x-two y-two neighbours ] [
 
 init-board: func [ x /local iter n t][
 
-    seg-coords: copy [5x5 255x5 505x5 5x250 505x255 5x505 255x505 505x505]
-    
-    canvas/parent/color: beige - 0.10.20
-    canvas/parent/text: append copy "Island Alleys " to pair! x
-
-    random/seed either empty? t: seed-field/text[now][to integer! t]
-   
     solved: false
 
     size: -1 + to integer! x
     dx: W / size
+    adj: z % dx
     
     iter-n/idx: 0.0
+
+    seg-coords: copy [5x5 255x5 505x5 5x250 505x255 5x505 255x505 505x505]
+    forall seg-coords [seg-coords/1: (round/to seg-coords/1 dx) + adj ]
     
+    canvas/parent/color: beige - 0.10.20
+    canvas/parent/text: append copy "Loop-it " to pair! x
+
+    random/seed either empty? t: seed-field/text[now][to integer! t]
+   
+   
     clear head board
     clear head solution
     
@@ -395,16 +399,14 @@ init-board: func [ x /local iter n t][
     get-the-loop
 ]
 
-locate-seg: func [ofs /local n][
+locate-seg: func [ofs /local n segn][
     n: 1
     foreach segment seg-zones [
          foreach [a b] segment[
             if all [ a/x <= ofs/x b/x >= ofs/x a/y <= ofs/y b/y >= ofs/y ] [
-                stat/color: green
-                stat/text: rejoin ["seg" n]
-                
+                segn: rejoin ["seg" n]
                 drag: ofs
-                drag-seg: stat/text
+                drag-seg: segn
                 drag-start: copy/part at get to word! drag-seg 2 size + 2
                 forall drag-start [drag-start/1: drag-start/1 - ofs]
                 return drag-seg
@@ -412,8 +414,7 @@ locate-seg: func [ofs /local n][
         ]
         n: n + 1
     ]
-    stat/color: red
-    stat/text: ""
+
 ]
 
 move-seg: func [ofs seg /local n p][
@@ -425,11 +426,23 @@ move-seg: func [ofs seg /local n p][
     ]
 ]
 
-update-seg: func[ofs seg /local p ] [
+update-seg: func[ofs seg /local p st outl bord] [
     if seg <> "" [
         p: -48 + to integer! last seg
         zones: seg-zones/:p
-        forall zones [zones/1: zones/1 + ofs - drag]
+        
+        outl: copy [-3x-3 3x3]
+        bord: append/dup copy [] outl size + 1 * 2
+        p: 1
+        forall zones [
+            zones/1: (round/to zones/1 - bord/:p + ofs - drag dx) + bord/:p + adj
+            p: p + 1
+        ]
+        
+        st: to word! seg
+        repeat n size + 2 [
+            p: poke get st n + 1 (round/to pick get st n + 1 dx) + adj
+        ]
         drag-seg: ""
     ]    
 ]
@@ -444,13 +457,13 @@ view compose [
     
     seed-field: field 90x30 font-size 12 hint "#"
     
-    style btn: button 90x30 font-size 12
+    style btn: base 90x30 beige font-size 12
     below across
     
-    small: btn "8x8" [
+    small: btn 90x30 beige font-size 12 "New" [
         init-board 8
         append clear canvas/draw draw-board
-    ]
+    ] on-over [small/color: small/color xor 10.10.10]
   
     info: btn "About" [
         view [
@@ -460,7 +473,8 @@ that covers all the dots. ^/^/Galen Ivanov, 2019
 }
             button "Close" [ unview ]
         ]
-    ]
+    ] on-over [info/color: info/color xor 10.10.10]
+    
     return below
     prog: progress 200x5 0% react [ prog/data: iter-n/idx ] 
         
@@ -471,6 +485,6 @@ that covers all the dots. ^/^/Galen Ivanov, 2019
     
 
     across    
-    text (beige - 0.10.20) "Galen Ivanov 2020"
-    stat: base red 50x20
+    inf: base 140x30 (beige - 0.10.20) (beige - 0.10.20) font-size 12 "Galen Ivanov 2020"
+    on-over [inf/color: inf/color xor 32.24.16]
 ] 
