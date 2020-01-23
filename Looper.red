@@ -8,19 +8,18 @@ Red[
 random/seed now
 
 buffer: make block! 5000
-board: make block! 10000
+board: make block! 5000
 b1: make block! 10000
-free-cells-left: make block! 10000
-free-cells-right: make block! 10000
+free-cells-left: make block! 5000
+free-cells-right: make block! 5000
 solution: make block! 1000
 border-loop: make block! 1000
 segments: make block! 1000
 segs: make block! 1000
-seg-coords: make block! 100
-
+centers-ofs: make block! [0 0 0 0 0 0 0 0 ]
+seg-coords: make block! 64
 seg-zones: make block! 100
-
-;test-loop: make block! 1000
+init-angles: copy [0 0 0 0 0 0 0 0]
 
 AW: 800    ; size of the active area
 W: 220     ; size of the grid in pixels
@@ -31,8 +30,6 @@ z: AW - W / 2       ; ofsset from the topleft corner of the active area to the d
 adj: 0x0
 
 start-border: 0
-
-iter-n: make reactor! [idx: 0]
 
 directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
 seg-coords: copy [5x5 280x5 560x5 5x280 560x280 5x560 280x560 560x560]
@@ -46,17 +43,17 @@ drag: 0x0
 draw-board: has [ a b r c offsx offsy ][
        
     num-font: make object! [
-        name: "Verdana"
-        size: 18
+        name: "Wingdings 3"
+        size: 50
         style: "bold"
         angle: 0
-        color: white ; reblue - 10.20.30
+        color: beige + 10.10.10 
         anti-alias?: true
         shadow: none
         state: none
         parent: none
     ]
-    num-font/size: to 1 dx / 2.5
+    ;num-font/size: to 1 dx / 2.5
     offsy: dx - num-font/size / 3
     
     clear buffer
@@ -75,7 +72,14 @@ draw-board: has [ a b r c offsx offsy ][
         }    
         ;]
         ; dots
-        keep [ pen white fill-pen white ]
+        
+        keep [font num-font]
+        keep [text 20x730 "1"]
+        keep [text 730x730 "Q"]
+        
+        keep [pen white fill-pen white]
+        
+        
         repeat r size [
             repeat c size [
                 keep compose [ box (as-pair c - 1 * dx - 3 + z  r - 1 * dx - 3 + z)
@@ -103,7 +107,7 @@ draw-board: has [ a b r c offsx offsy ][
         ]
         }
 
-        ;keep test-loop  ; the entire loop
+
         keep [line-cap round line-join round ]
         keep segs   ; the cut segments
     ] buffer
@@ -131,7 +135,6 @@ get-the-loop: has [ x y border a b c d x1 y1 x2 y2][
 
                         keep as-pair x1 + z y1 + z keep as-pair x2 + z y2 + z
                         keep border                        
-                        ;]
                     ]
                 ]
             ]
@@ -139,51 +142,60 @@ get-the-loop: has [ x y border a b c d x1 y1 x2 y2][
     ] solution
     
     build-loop solution
+]
+
+dir-to-rel-coords: func [
+    n
+    
+    /local
+    ang
+    x y
+    minx miny maxx maxy
+][
+    collect [
+        ang: init-angles/:n   ; should be loaded from the list of starting angles
+        x: y: 0
+        minx: miny: maxx: maxy: 0
         
+        angs: copy/part at segments size + 1 * (n - 1) size + 1
+        print angs
+        keep compose[(to set-word! rejoin["seg" n]) line] 
+        keep as-pair x y
+        
+        forall angs [
+            ang: ang + angs/1
+            x: x + (dx * cosine ang)
+            minx: min minx x
+            maxx: max maxx x
+            y: y - (dx * sine ang) 
+            miny: min miny y
+            maxy: max maxy y
+            keep as-pair x y
+        ] 
+        centers-ofs/:n: as-pair (size + 1) / 2.0 - (absolute (maxx - minx) / 2.0) - minx
+                           (size + 1) / 2.0 - (absolute (maxy - miny) / 2.0) - miny          
+    ]
 ]
 
 cut-segments: func [
     seg
-    /local ang angs n x y minx maxx miny maxy ofs start p1 p2
+    /local
+    ang angs
+    n x y
+    minx maxx miny maxy
+    ofs start p1 p2
 ][
-    print seg 
     clear segs
     clear seg-zones
-    ofs: clear []
+    ofs: copy []
     
     collect/into [
         keep [line-width 9 pen white]
-        repeat n size + 1 [
-            ang: 0
-            x: y: 0
-            minx: miny: maxx: maxy: 0
-            
-            angs: take/part seg size + 1  
-            keep compose[(to set-word! rejoin["seg" n]) line] 
-            keep as-pair x y
-            
-            forall angs [
-                ang: ang + angs/1
-                x: x + (dx * cosine ang)
-                minx: min minx x
-                maxx: max maxx x
-                
-                y: y - (dx * sine ang) 
-                miny: min miny y
-                maxy: max maxy y
-               
-                keep as-pair x y
-            ] 
-            append ofs as-pair (size + 1) / 2.0 - (absolute (maxx - minx) / 2.0) - minx
-                               (size + 1) / 2.0 - (absolute (maxy - miny) / 2.0) - miny          
-                               
-            
-        ]
+        repeat n size + 1 [ keep dir-to-rel-coords n ]
     ] segs
     
     repeat n size + 1 [
-        seg-coords/:n: (round/to size + 2 / 2.0 * dx + seg-coords/:n + ofs/:n dx) + adj
-        
+        seg-coords/:n: (round/to size + 2 / 2.0 * dx + seg-coords/:n + centers-ofs/:n dx) + adj
     ]
     
     start: next find/tail segs 'seg1
@@ -219,10 +231,6 @@ cut-segments: func [
 ]
 
 get-dirs: func[borders /local ang ang-inc x y][
-
-;    clear test-loop
-;    append test-loop  [line-width 5 pen snow line]
-;    append test-loop as-pair rx ry   ; starting point
     
     ang: pick [90 0 -90 180] index? find "LURD" start-border
     x: rx
@@ -250,7 +258,6 @@ get-dirs: func[borders /local ang ang-inc x y][
             ang: ang + ang-inc
             x: x + (dx * cosine ang)
             y: y - (dx * sine ang) 
-            ;append test-loop as-pair x y
         ] 
     ] segments
     
@@ -353,7 +360,7 @@ shuffle-board: has [ x-one y-one x-two y-two neighbours ] [
     board/(new-pos/2)/(new-pos/1): 1  ; update the board with the new selected cell
 ]
 
-init-board: func [ x /local iter n t][
+init-board: func [ x /local n t][
 
     solved: false
 
@@ -361,19 +368,12 @@ init-board: func [ x /local iter n t][
     dx: W / size
     adj: z % dx
     
-    iter-n/idx: 0.0
-
     seg-coords: copy [5x5 255x5 505x5 5x250 505x255 5x505 255x505 505x505]
-   ; print seg-coords
-    forall seg-coords [seg-coords/1: (round/to seg-coords/1 dx) + adj ]
-   ; print seg-coords
-    
-    
+
     canvas/parent/color: beige - 0.10.20
     canvas/parent/text: append copy "Loop-it " to pair! x
 
     random/seed either empty? t: seed-field/text[now][to integer! t]
-   
    
     clear head board
     clear head solution
@@ -393,11 +393,8 @@ init-board: func [ x /local iter n t][
     ]
     
     iter: r * c
-    n: 0.0
     loop iter [ 
         shuffle-board
-        n: n + 1
-        iter-n/idx: n / iter
     ]
 
     get-the-loop
@@ -418,7 +415,6 @@ locate-seg: func [ofs /local n segn][
         ]
         n: n + 1
     ]
-
 ]
 
 move-seg: func [ofs seg /local n p][
@@ -439,13 +435,13 @@ update-seg: func[ofs seg /local p st outl bord] [
         bord: append/dup copy [] outl size + 1 * 2
         p: 1
         forall zones [
-            zones/1: (round/to zones/1 - bord/:p + ofs - drag dx) + bord/:p + adj
+            zones/1: (round/to zones/1 - bord/:p + ofs - drag - (dx / 2.0) dx) + bord/:p + adj
             p: p + 1
         ]
         
         st: to word! seg
         repeat n size + 2 [
-            p: poke get st n + 1 (round/to pick get st n + 1 dx) + adj
+            p: poke get st n + 1 (round/to (pick get st n + 1) - (dx / 2.0) dx) + adj
         ]
         drag-seg: ""
     ]    
@@ -480,15 +476,9 @@ that covers all the dots. ^/^/Galen Ivanov, 2019
     ] on-over [info/color: info/color xor 10.10.10]
     
     return below
-    prog: progress 200x5 0% react [ prog/data: iter-n/idx ] 
         
     canvas: base (as-pair AW + 4 AW + 4) (beige - 0.10.20) draw [] all-over
             on-down [locate-seg event/offset]
             on-over [move-seg event/offset drag-seg]
             on-up   [update-seg event/offset drag-seg]
-    
-
-    across    
-    inf: base 140x30 (beige - 0.10.20) (beige - 0.10.20) font-size 12 "Galen Ivanov 2020"
-    on-over [inf/color: inf/color xor 32.24.16]
 ] 
