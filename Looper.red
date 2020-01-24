@@ -9,16 +9,17 @@ random/seed now
 
 buffer: make block! 5000
 board: make block! 5000
-b1: make block! 10000
+b1: make block! 0000
 free-cells-left: make block! 5000
 free-cells-right: make block! 5000
 solution: make block! 1000
 border-loop: make block! 1000
 segments: make block! 1000
+seg-coords: make block! 8
 segs: make block! 1000
 centers-ofs: make block! [0 0 0 0 0 0 0 0 ]
-seg-coords: make block! 64
-seg-zones: make block! 100
+;seg-zones: copy [[] [] [] [] [] [] [] [] ]
+seg-zones: make block! 64
 init-angles: copy [0 0 0 0 0 0 0 0]
 
 AW: 800    ; size of the active area
@@ -32,9 +33,9 @@ adj: 0x0
 start-border: 0
 
 directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
-seg-coords: copy [5x5 280x5 560x5 5x280 560x280 5x560 280x560 560x560]
 
 solved: false
+rotated: 0
 
 drag-seg: ""
 drag-start: 0x0
@@ -106,10 +107,10 @@ draw-board: has [ a b r c offsx offsy ][
             keep compose [text (as-pair x - 1 * dx + offsx + z y - 1 * dx + offsy  + z) (n)] 
         ]
         }
-
-
         keep [line-cap round line-join round ]
         keep segs   ; the cut segments
+        
+        
     ] buffer
 ]
 
@@ -144,21 +145,53 @@ get-the-loop: has [ x y border a b c d x1 y1 x2 y2][
     build-loop solution
 ]
 
+make-zones: func[
+    n seg
+    
+    /local
+    n-rects
+    p1 p2    
+    start
+][
+    start: seg
+    change/only at seg-zones n collect [     ; for detection of the segment zones by the mouse events
+        n-rects: size + 1
+        loop size + 2 [                 ; lines in the segment  
+            if n-rects > 0 [
+                p1: start/1
+                p2: start/2
+                if (p1/x > p2/x) or (p1/y > p2/y) [
+                    p1: start/2
+                    p2: start/1
+                ]
+                keep p1 - 3x3
+                keep p2 + 3x3
+                n-rects: n-rects - 1
+            ]
+            start: next start
+        ]
+    ]
+]
+
 dir-to-rel-coords: func [
     n
+    init 
     
     /local
     ang
     x y
     minx miny maxx maxy
+    n-rects p1 p2
+    segs
+    ofs
 ][
-    collect [
+    segs: copy []
+    collect/into [
         ang: init-angles/:n   ; should be loaded from the list of starting angles
         x: y: 0
         minx: miny: maxx: maxy: 0
         
         angs: copy/part at segments size + 1 * (n - 1) size + 1
-        print angs
         keep compose[(to set-word! rejoin["seg" n]) line] 
         keep as-pair x y
         
@@ -171,63 +204,40 @@ dir-to-rel-coords: func [
             miny: min miny y
             maxy: max maxy y
             keep as-pair x y
-        ] 
-        centers-ofs/:n: as-pair (size + 1) / 2.0 - (absolute (maxx - minx) / 2.0) - minx
-                           (size + 1) / 2.0 - (absolute (maxy - miny) / 2.0) - miny          
-    ]
+        ]
+    ] segs
+        
+    centers-ofs/:n: as-pair (size + 1) / 2.0 - (absolute (maxx - minx) / 2.0) - minx
+                           (size + 1) / 2.0 - (absolute (maxy - miny) / 2.0) - miny
+                                     
+    seg-coords/:n: (round/to size + 2 / 2.0 * dx + seg-coords/:n + centers-ofs/:n dx) + adj
+    
+  
+    if init = 1 [           ; arrange the segments in their starting positions
+        start: at segs 3
+        loop size + 2 [
+            start/1: start/1 + seg-coords/:n
+            start: next start
+        ]
+        make-zones n at segs 3   
+    ] 
+    
+    segs
 ]
 
 cut-segments: func [
     seg
     /local
-    ang angs
-    n x y
-    minx maxx miny maxy
-    ofs start p1 p2
+    n 
 ][
     clear segs
-    clear seg-zones
-    ofs: copy []
+    seg-zones: copy [0 0 0 0 0 0 0 0]
     
     collect/into [
         keep [line-width 9 pen white]
-        repeat n size + 1 [ keep dir-to-rel-coords n ]
+        repeat n size + 1 [ keep dir-to-rel-coords n 1 ]  
     ] segs
-    
-    repeat n size + 1 [
-        seg-coords/:n: (round/to size + 2 / 2.0 * dx + seg-coords/:n + centers-ofs/:n dx) + adj
-    ]
-    
-    start: next find/tail segs 'seg1
-    repeat n size + 1 [                 ; segments
-        loop size + 2 [                 ; lines in the segment  
-            start/1: start/1 + seg-coords/:n
-            start: next start
-        ]
-        start: skip start 2
-    ] 
-    
-    start: next find/tail segs 'seg1
-    repeat n size + 1 [                     ; segments
-        append/only seg-zones collect [     ; for detection of the segment zones by the mouse events
-            n-rects: size + 1
-            loop size + 2 [                 ; lines in the segment  
-                if n-rects > 0 [
-                    p1: start/1
-                    p2: start/2
-                    if (p1/x > p2/x) or (p1/y > p2/y) [
-                        p1: start/2
-                        p2: start/1
-                    ]
-                    keep p1 - 3x3
-                    keep p2 + 3x3
-                    n-rects: n-rects - 1
-                ]
-                start: next start
-            ]
-            start: skip start 2
-        ]
-    ] 
+    ;probe seg-zones/1
 ]
 
 get-dirs: func[borders /local ang ang-inc x y][
@@ -417,34 +427,36 @@ locate-seg: func [ofs /local n segn][
     ]
 ]
 
-move-seg: func [ofs seg /local n p][
+move-seg: func [ofs seg /local st n p rot][
     if seg <> "" [
         st: to word! seg
+        p: -48 + to integer! last seg
+        ;rot: drag-start
+        if all [rotated = 0 ofs/x > 720 ofs/x < 780 ofs/y > 720 ofs/y < 780] [
+            init-angles/:p: init-angles/:p + 90 % 360
+            drag-start: at dir-to-rel-coords p 0 3
+            rotated: 1
+        ]
+        
         repeat n size + 2 [
             poke get st n + 1 drag-start/:n + ofs
         ]
     ]
 ]
 
-update-seg: func[ofs seg /local p st outl bord] [
+update-seg: func[ofs seg /local p st outl bord n] [
     if seg <> "" [
         p: -48 + to integer! last seg
-        zones: seg-zones/:p
-        
-        outl: copy [-3x-3 3x3]
-        bord: append/dup copy [] outl size + 1 * 2
-        p: 1
-        forall zones [
-            zones/1: (round/to zones/1 - bord/:p + ofs - drag - (dx / 2.0) dx) + bord/:p + adj
-            p: p + 1
-        ]
         
         st: to word! seg
         repeat n size + 2 [
-            p: poke get st n + 1 (round/to (pick get st n + 1) - (dx / 2.0) dx) + adj
+            poke get st n + 1 (round/to (pick get st n + 1) - (dx / 2.0) dx) + adj
         ]
         drag-seg: ""
-    ]    
+        bord: copy/part at get st 2 size + 2
+        make-zones p bord
+    ]
+    rotated: 0
 ]
 
 view compose [
