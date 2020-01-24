@@ -30,7 +30,7 @@ dx: 0
 z: AW - W / 2       ; ofsset from the topleft corner of the active area to the dots area
 adj: 0x0
 
-start-border: 0
+;start-border: 0
 
 directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
 
@@ -62,15 +62,15 @@ draw-board: has [ a b r c offsx offsy ][
     collect/into [
         ; the island itself
         ;if solved [ 
-        {
-        keep [ pen teal fill-pen teal ]
+        
+        keep [ pen beige fill-pen beige ]
             repeat r size [
                 repeat c size [
                     if board/:r/:c = 1 [keep compose [ box (as-pair c - 1 * dx + z r - 1 * dx + z)
                                                            (as-pair c * dx + z r * dx + z)]]
                 ]
             ]
-        }    
+            
         ;]
         ; dots
         
@@ -79,8 +79,7 @@ draw-board: has [ a b r c offsx offsy ][
         keep [text 730x730 "Q"]
         
         keep [pen white fill-pen white]
-        
-        
+       
         repeat r size [
             repeat c size [
                 keep compose [ box (as-pair c - 1 * dx - 3 + z  r - 1 * dx - 3 + z)
@@ -110,39 +109,7 @@ draw-board: has [ a b r c offsx offsy ][
         keep [line-cap round line-join round ]
         keep segs   ; the cut segments
         
-        
     ] buffer
-]
-
-get-the-loop: has [ x y border a b c d x1 y1 x2 y2][
-    collect/into [
-        repeat y size [
-            repeat x size [
-                if board/:y/:x = 1 [
-                    line-block: copy [ line ]
-                    foreach border difference "LURD" get-neighbours board x y 1 [
-                        set [a b c d] select [ #"U" [0 0 1 0] 
-                                               #"R" [1 0 1 1]
-                                               #"L" [0 0 0 1] 
-                                               #"D" [0 1 1 1] ] border
-                        x1: x + a - 1 * dx 
-                        y1: y + b - 1 * dx 
-                        x2: x + c - 1 * dx 
-                        y2: y + d - 1 * dx 
-                         
-                        ; reverse down and left edges, so that the edges can form a loop 
-                        if border = #"D" [t: x1 x1: x2 x2: t]  
-                        if border = #"L" [t: y1 y1: y2 y2: t]
-
-                        keep as-pair x1 + z y1 + z keep as-pair x2 + z y2 + z
-                        keep border                        
-                    ]
-                ]
-            ]
-        ]
-    ] solution
-    
-    build-loop solution
 ]
 
 make-zones: func[
@@ -156,7 +123,7 @@ make-zones: func[
     start: seg
     change/only at seg-zones n collect [     ; for detection of the segment zones by the mouse events
         n-rects: size + 1
-        loop size + 2 [                 ; lines in the segment  
+        loop size + 2 [                
             if n-rects > 0 [
                 p1: start/1
                 p2: start/2
@@ -191,7 +158,7 @@ dir-to-rel-coords: func [
         x: y: 0
         minx: miny: maxx: maxy: 0
         
-        angs: copy/part at segments size + 1 * (n - 1) size + 1
+        angs: copy/part at segments size + 1 * (n - 1) + 1 size + 1
         keep compose[(to set-word! rejoin["seg" n]) line] 
         keep as-pair x y
         
@@ -225,6 +192,15 @@ dir-to-rel-coords: func [
     segs
 ]
 
+reverse-seg: func[
+    n
+    /local
+    i
+][
+   n
+   
+]
+
 cut-segments: func [
     seg
     /local
@@ -233,21 +209,16 @@ cut-segments: func [
     clear segs
     seg-zones: copy [0 0 0 0 0 0 0 0]
     
-    collect/into [
+    collect/into [                            
         keep [line-width 9 pen white]
         repeat n size + 1 [ keep dir-to-rel-coords n 1 ]  
     ] segs
-    ;probe seg-zones/1
+
 ]
 
 get-dirs: func[borders /local ang ang-inc x y][
-    
-    ang: pick [90 0 -90 180] index? find "LURD" start-border
-    x: rx
-    y: ry
-    
     clear segments
-    
+    insert borders last borders    
     collect/into [
         repeat n (length? borders) - 1 [
             ang-inc: switch rejoin[borders/:n borders/(n + 1)] [
@@ -265,16 +236,13 @@ get-dirs: func[borders /local ang ang-inc x y][
                 "DR" [ 90]
             ]
             keep ang-inc
-            ang: ang + ang-inc
-            x: x + (dx * cosine ang)
-            y: y - (dx * sine ang) 
         ] 
     ] segments
     
     cut-segments segments
 ]
 
-build-loop: func[sol /local s p1 p2][
+build-loop: func[solution /local s p1 p2][
     s: (random ((length? solution) - 1)) / 3
     s: s * 3 + 1
     
@@ -282,23 +250,19 @@ build-loop: func[sol /local s p1 p2][
     rx: solution/:s/1 
     ry: solution/:s/2
     
-    rd: solution/(s + 2)  ; starting edge
-    start-border: rd
-    
-    clear border-loop    ; borders of the cell -> will be used to get directions
-    
-    append border-loop rd
+   
+    clear border-loop  
         
     p1: solution/:s
     collect/into [
         until [
             p2: take/part find/skip solution p1 3 3
-            keep take/last p2
+            keep last p2
             p1: p2/2
             empty? solution 
         ] 
     ] border-loop
-       
+    
     get-dirs border-loop
 ]
 
@@ -335,6 +299,37 @@ count-cells: func [ x y dx dy /local n ][
     n
 ]
 
+get-the-loop: has [ x y border a b c d x1 y1 x2 y2][
+    collect/into [
+        repeat y size [
+            repeat x size [
+                if board/:y/:x = 1 [
+                    line-block: copy [ line ]
+                    foreach border difference "LURD" get-neighbours board x y 1 [
+                        set [a b c d] select [ #"U" [0 0 1 0] 
+                                               #"R" [1 0 1 1]
+                                               #"L" [0 0 0 1] 
+                                               #"D" [0 1 1 1] ] border
+                        x1: x + a - 1 * dx 
+                        y1: y + b - 1 * dx 
+                        x2: x + c - 1 * dx 
+                        y2: y + d - 1 * dx 
+                         
+                        ; reverse down and left edges, so that the edges can form a loop 
+                        if border = #"D" [t: x1 x1: x2 x2: t]  
+                        if border = #"L" [t: y1 y1: y2 y2: t]
+
+                        keep as-pair x1 + z y1 + z keep as-pair x2 + z y2 + z
+                        keep border                        
+                    ]
+                ]
+            ]
+        ]
+    ] solution
+    
+    build-loop solution
+]
+
 shuffle-board: has [ x-one y-one x-two y-two neighbours ] [
     
     until [
@@ -366,7 +361,7 @@ shuffle-board: has [ x-one y-one x-two y-two neighbours ] [
     split-island x-two y-two
     
     new-pos: random/only next intersect free-cells-left free-cells-right
-    
+
     board/(new-pos/2)/(new-pos/1): 1  ; update the board with the new selected cell
 ]
 
@@ -431,20 +426,19 @@ move-seg: func [ofs seg /local st n p rot][
     if seg <> "" [
         st: to word! seg
         p: -48 + to integer! last seg
-        ;rot: drag-start
         if all [rotated = 0 ofs/x > 720 ofs/x < 780 ofs/y > 720 ofs/y < 780] [
             init-angles/:p: init-angles/:p + 90 % 360
             drag-start: at dir-to-rel-coords p 0 3
             rotated: 1
         ]
-        
+            
         repeat n size + 2 [
             poke get st n + 1 drag-start/:n + ofs
         ]
     ]
 ]
 
-update-seg: func[ofs seg /local p st outl bord n] [
+update-seg: func[ofs seg /local p st n] [
     if seg <> "" [
         p: -48 + to integer! last seg
         
@@ -453,8 +447,7 @@ update-seg: func[ofs seg /local p st outl bord n] [
             poke get st n + 1 (round/to (pick get st n + 1) - (dx / 2.0) dx) + adj
         ]
         drag-seg: ""
-        bord: copy/part at get st 2 size + 2
-        make-zones p bord
+        make-zones p copy/part at get st 2 size + 2
     ]
     rotated: 0
 ]
