@@ -1,5 +1,5 @@
 Red[
-    Title: "Loop-thru - a logic game"
+    Title: "Looper - a logic game"
     Author: "Galen Ivanov"
     Date: 13-01-2020
     needs: View
@@ -36,6 +36,7 @@ directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
 solved: false
 rotated: 0
 flipped: 0
+about-open: 1
 
 drag-seg: ""
 drag-start: 0x0
@@ -62,13 +63,13 @@ draw-board: has [ a b r c offsx offsy ][
     collect/into [
         ; the island itself
         ;if solved [ 
-        {keep [ pen beige fill-pen beige ]
+        keep [ pen beige fill-pen beige ]
             repeat r size [
                 repeat c size [
                     if board/:r/:c = 1 [keep compose [ box (as-pair c - 1 * dx + z r - 1 * dx + z)
                                                            (as-pair c * dx + z r * dx + z)]]
                 ]
-            ]}
+            ]
         ;]
     
        ; flip / rotate buttons
@@ -376,7 +377,7 @@ init-board: func [ x /local n t][
     seg-coords: random copy [5x5 255x5 505x5 5x250 505x255 5x505 255x505 505x505]
 
     canvas/parent/color: beige - 0.10.20
-    canvas/parent/text: append copy "Loop-it " to pair! x
+    canvas/parent/text: append copy "Looper " to pair! x
 
     random/seed either empty? t: seed-field/text[now][to integer! t]
    
@@ -424,6 +425,12 @@ locate-seg: func [ofs /local n segn][
 
 move-seg: func [ofs seg /local st n p rot][
     if seg <> "" [
+    
+        ofs/x: max 20 ofs/x
+        ofs/x: min AW - 20 ofs/x
+        ofs/y: max 20 ofs/y
+        ofs/y: min AW - 20 ofs/y
+        
         st: to word! seg
         p: -48 + to integer! last seg
         
@@ -493,14 +500,17 @@ view compose [
         append clear canvas/draw draw-board
     ] on-over [small/color: small/color xor 10.10.10]
   
-    info: btn "About" [
-        view [
-            title "About Loope"
-            text {The objective is to arrange the lines in a simple loop
+    info: btn "About" [ 
+        if about-open = 1 [
+            about-open: 0
+            view [
+                title "About Looper"
+                text {The objective is to arrange the lines in a simple loop
 that covers all the dots. ^/^/Galen Ivanov, 2020
 }
-            button "Close" [ unview ]
-        ]
+                button "Close" [ about-open: 1 unview ]
+            ]
+        ]    
     ] on-over [info/color: info/color xor 10.10.10]
     
     return below
