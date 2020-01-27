@@ -62,7 +62,7 @@ draw-board: has [ a b r c offsx offsy ][
     collect/into [
         ; the island itself
         ;if solved [ 
-       { keep [ pen beige fill-pen beige ]
+        {keep [ pen beige fill-pen beige ]
             repeat r size [
                 repeat c size [
                     if board/:r/:c = 1 [keep compose [ box (as-pair c - 1 * dx + z r - 1 * dx + z)
@@ -210,7 +210,10 @@ cut-segments: func [
         keep [line-width 9 pen white]
         repeat n size + 1 [ keep dir-to-rel-coords n 1 ]  
     ] segs
-
+    
+    repeat n size + 1 [
+        if 50 < random 100 [ reverse-seg n ]
+    ]
 ]
 
 get-dirs: func[borders /local ang ang-inc x y][
@@ -426,7 +429,7 @@ move-seg: func [ofs seg /local st n p rot][
         
         ; rotate 
         
-        if all [rotated = 0 ofs/x > 420 ofs/x < 480 ofs/y > 720 ofs/y < 780] [        
+        if all [rotated = 0 ofs/x >= 420 ofs/x <= 480 ofs/y > 720 ofs/y < 780] [        
             init-angles/:p: init-angles/:p + 90 % 360
             drag-start: at dir-to-rel-coords p 0 3
             rotated: 1
@@ -440,14 +443,14 @@ move-seg: func [ofs seg /local st n p rot][
         ]
         
         ; flip
-        if all[flipped = 0 ofs/x > 340 ofs/x < 400 ofs/y > 720 ofs/y < 780] [        
+        if all[flipped = 0 ofs/x >= 330 ofs/x <= 390 ofs/y > 720 ofs/y < 780] [        
             reverse-seg p 0
             drag-start: at dir-to-rel-coords p 0 3
             flipped: 1
             flip-btn/3: ""
         ]   
 
-        if any [ofs/x < 340 ofs/x > 400 ofs/y < 720 ofs/y > 780] [        
+        if any [ofs/x < 330 ofs/x > 390 ofs/y < 720 ofs/y > 780] [        
             flip-btn/3: "2"
             flipped: 0
         ]        
@@ -493,8 +496,8 @@ view compose [
     info: btn "About" [
         view [
             title "About Loope"
-            text {The objective is to arrange the lines in a closed loop
-that covers all the dots. ^/^/Galen Ivanov, 2019
+            text {The objective is to arrange the lines in a simple loop
+that covers all the dots. ^/^/Galen Ivanov, 2020
 }
             button "Close" [ unview ]
         ]
