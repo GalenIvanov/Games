@@ -18,7 +18,6 @@ segments: make block! 1000
 seg-coords: make block! 8
 segs: make block! 1000
 centers-ofs: make block! [0 0 0 0 0 0 0 0 ]
-;seg-zones: copy [[] [] [] [] [] [] [] [] ]
 seg-zones: make block! 64
 init-angles: copy [0 0 0 0 0 0 0 0]
 
@@ -36,6 +35,7 @@ directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
 
 solved: false
 rotated: 0
+flipped: 0
 
 drag-seg: ""
 drag-start: 0x0
@@ -54,7 +54,7 @@ draw-board: has [ a b r c offsx offsy ][
         state: none
         parent: none
     ]
-    ;num-font/size: to 1 dx / 2.5
+
     offsy: dx - num-font/size / 3
     
     clear buffer
@@ -62,34 +62,30 @@ draw-board: has [ a b r c offsx offsy ][
     collect/into [
         ; the island itself
         ;if solved [ 
-        
-        keep [ pen beige fill-pen beige ]
+       { keep [ pen beige fill-pen beige ]
             repeat r size [
                 repeat c size [
                     if board/:r/:c = 1 [keep compose [ box (as-pair c - 1 * dx + z r - 1 * dx + z)
                                                            (as-pair c * dx + z r * dx + z)]]
                 ]
-            ]
-            
+            ]}
         ;]
-        ; dots
-        
+    
+       ; flip / rotate buttons
         keep [font num-font]
-        keep [text 20x730 "1"]
-        keep [text 730x730 "Q"]
+        keep [flip-btn: text 340x730 "2"]
+        keep [rot-btn: text 430x730 "Q"]
         
         keep [pen white fill-pen white]
-       
+        
+        ; dots       
         repeat r size [
             repeat c size [
-                keep compose [ box (as-pair c - 1 * dx - 3 + z  r - 1 * dx - 3 + z)
-                                   (as-pair c - 1 * dx + 3 + z  r - 1 * dx + 3 + z)
-                               box (as-pair c     * dx - 3 + z  r - 1 * dx - 3 + z)
-                                   (as-pair c     * dx + 3 + z  r - 1 * dx + 3 + z)
-                               box (as-pair c - 1 * dx - 3 + z  r     * dx - 3 + z)
-                                   (as-pair c - 1 * dx + 3 + z  r     * dx + 3 + z)
-                               box (as-pair c     * dx - 3 + z  r     * dx - 3 + z)
-                                   (as-pair c     * dx + 3 + z  r     * dx + 3 + z)                                      
+                keep compose [
+                    circle (as-pair c - 1 * dx + z  r - 1 * dx + z) 4
+                    circle (as-pair c     * dx + z  r - 1 * dx + z) 4
+                    circle (as-pair c - 1 * dx + z  r     * dx + z) 4
+                    circle (as-pair c     * dx + z  r     * dx + z) 4
                 ]
             ]
         ]
@@ -195,10 +191,11 @@ dir-to-rel-coords: func [
 reverse-seg: func[
     n
     /local
-    i
+    angs
 ][
-   n
-   
+    angs: copy/part at segments size + 1 * (n - 1) + 1 size + 1
+    forall angs [angs/1: -1 * angs/1]  ; 0 -> 0; -90 -> 90; 90 -> -90
+    change/part at segments size + 1 * (n - 1) + 1 angs size + 1
 ]
 
 cut-segments: func [
@@ -373,7 +370,7 @@ init-board: func [ x /local n t][
     dx: W / size
     adj: z % dx
     
-    seg-coords: copy [5x5 255x5 505x5 5x250 505x255 5x505 255x505 505x505]
+    seg-coords: random copy [5x5 255x5 505x5 5x250 505x255 5x505 255x505 505x505]
 
     canvas/parent/color: beige - 0.10.20
     canvas/parent/text: append copy "Loop-it " to pair! x
@@ -426,11 +423,34 @@ move-seg: func [ofs seg /local st n p rot][
     if seg <> "" [
         st: to word! seg
         p: -48 + to integer! last seg
-        if all [rotated = 0 ofs/x > 720 ofs/x < 780 ofs/y > 720 ofs/y < 780] [
+        
+        ; rotate 
+        
+        if all [rotated = 0 ofs/x > 420 ofs/x < 480 ofs/y > 720 ofs/y < 780] [        
             init-angles/:p: init-angles/:p + 90 % 360
             drag-start: at dir-to-rel-coords p 0 3
             rotated: 1
+            rot-btn/3: ""
+        ] 
+        
+        ; deactivate the rotation button
+        if any [ofs/x < 420 ofs/x > 480 ofs/y < 720 ofs/y > 780] [        
+            rot-btn/3: "Q"
+            rotated: 0
         ]
+        
+        ; flip
+        if all[flipped = 0 ofs/x > 340 ofs/x < 400 ofs/y > 720 ofs/y < 780] [        
+            reverse-seg p 0
+            drag-start: at dir-to-rel-coords p 0 3
+            flipped: 1
+            flip-btn/3: ""
+        ]   
+
+        if any [ofs/x < 340 ofs/x > 400 ofs/y < 720 ofs/y > 780] [        
+            flip-btn/3: "2"
+            flipped: 0
+        ]        
             
         repeat n size + 2 [
             poke get st n + 1 drag-start/:n + ofs
