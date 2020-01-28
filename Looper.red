@@ -21,6 +21,8 @@ centers-ofs: make block! [0 0 0 0 0 0 0 0 ]
 seg-zones: make block! 64
 init-angles: copy [0 0 0 0 0 0 0 0]
 
+occupied-dots: copy #()
+
 AW: 800    ; size of the active area
 W: 220     ; size of the grid in pixels
 size: 7    ; size of the grid - rows and columns - boxes, not points!
@@ -74,8 +76,8 @@ draw-board: has [ a b r c offsx offsy ][
     
        ; flip / rotate buttons
         keep [font num-font]
-        keep [flip-btn: text 340x730 "2"]
-        keep [rot-btn: text 430x730 "Q"]
+        keep [flip-btn: text 260x720 "2"]
+        keep [rot-btn: text 510x720 "Q"]
         
         keep [pen white fill-pen white]
         
@@ -106,7 +108,50 @@ draw-board: has [ a b r c offsx offsy ][
         keep [line-cap round line-join round ]
         keep segs   ; the cut segments
         
+        
     ] buffer
+    
+    
+]
+
+check-dots: func [
+    /local
+    x y coord dot
+][
+    repeat y 8 [
+        repeat x 8 [
+            coord: as-pair x - 1 * 31 + 290 y - 1 * 31 + 290
+            dot: select occupied-dots coord
+            if (dot = none) or (dot <> 1) [
+                return false
+            ]
+        ]
+    ]
+    true
+]
+
+write-to-dot-map: func[
+    segn
+    
+    /local
+    dot-key
+    dot-weights
+    st
+    n
+][
+    dot-weights: copy [0.5 1 1 1 1 1 1 1 0.5]
+    st: to word! segn
+
+    repeat n size + 2 [
+            dot-key: pick get st n + 1
+            either select occupied-dots dot-key [
+                put occupied-dots dot-key (select occupied-dots dot-key) + dot-weights/:n
+            ][
+                put occupied-dots dot-key dot-weights/:n
+            ]
+            
+        ]
+        
 ]
 
 make-zones: func[
@@ -128,8 +173,8 @@ make-zones: func[
                     p1: start/2
                     p2: start/1
                 ]
-                keep p1 - 3x3
-                keep p2 + 3x3
+                keep p1 - 6 ;3x3
+                keep p2 + 6 ;3x3
                 n-rects: n-rects - 1
             ]
             start: next start
@@ -207,14 +252,15 @@ cut-segments: func [
     clear segs
     seg-zones: copy [0 0 0 0 0 0 0 0]
     
-    collect/into [                            
-        keep [line-width 9 pen white]
-        repeat n size + 1 [ keep dir-to-rel-coords n 1 ]  
-    ] segs
-    
     repeat n size + 1 [
         if 50 < random 100 [ reverse-seg n ]
     ]
+    
+    collect/into [                            
+        keep [line-width 9 line-color: pen white]
+        repeat n size + 1 [ keep dir-to-rel-coords n 1 ]  
+    ] segs
+    
 ]
 
 get-dirs: func[borders /local ang ang-inc x y][
@@ -250,7 +296,6 @@ build-loop: func[solution /local s p1 p2][
     ; for visualization of the starting point
     rx: solution/:s/1 
     ry: solution/:s/2
-    
    
     clear border-loop  
         
@@ -435,8 +480,7 @@ move-seg: func [ofs seg /local st n p rot][
         p: -48 + to integer! last seg
         
         ; rotate 
-        
-        if all [rotated = 0 ofs/x >= 420 ofs/x <= 480 ofs/y > 720 ofs/y < 780] [        
+        if all [rotated = 0 ofs/x >= 500 ofs/x <= 570 ofs/y > 720 ofs/y < 790] [        
             init-angles/:p: init-angles/:p + 90 % 360
             drag-start: at dir-to-rel-coords p 0 3
             rotated: 1
@@ -444,20 +488,22 @@ move-seg: func [ofs seg /local st n p rot][
         ] 
         
         ; deactivate the rotation button
-        if any [ofs/x < 420 ofs/x > 480 ofs/y < 720 ofs/y > 780] [        
+        if any [ofs/x < 500 ofs/x > 570 ofs/y < 720 ofs/y > 790] [        
             rot-btn/3: "Q"
             rotated: 0
         ]
         
         ; flip
-        if all[flipped = 0 ofs/x >= 330 ofs/x <= 390 ofs/y > 720 ofs/y < 780] [        
+        if all[flipped = 0 ofs/x >= 260 ofs/x <= 330 ofs/y > 720 ofs/y < 790] [        
             reverse-seg p 0
             drag-start: at dir-to-rel-coords p 0 3
             flipped: 1
             flip-btn/3: ""
+            
+            ;line-color/2: yello
         ]   
 
-        if any [ofs/x < 330 ofs/x > 390 ofs/y < 720 ofs/y > 780] [        
+        if any [ofs/x < 260 ofs/x > 330 ofs/y < 720 ofs/y > 790] [        
             flip-btn/3: "2"
             flipped: 0
         ]        
@@ -475,9 +521,15 @@ update-seg: func[ofs seg /local p st n] [
         st: to word! seg
         repeat n size + 2 [
             poke get st n + 1 (round/to (pick get st n + 1) - (dx / 2.0) dx) + adj
+            ;print [n "->" pick get st n + 1]
         ]
+        
+        write-to-dot-map seg
+        
         drag-seg: ""
         make-zones p copy/part at get st 2 size + 2
+        
+        if check-dots [line-color/2: yello]
     ]
     rotated: 0
 ]
@@ -500,7 +552,7 @@ view compose [
         append clear canvas/draw draw-board
     ] on-over [small/color: small/color xor 10.10.10]
   
-    info: btn "About" [ 
+    info: btn "About" on-up [ 
         if about-open = 1 [
             about-open: 0
             view [
