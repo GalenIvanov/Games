@@ -31,8 +31,6 @@ dx: 0
 z: AW - W / 2       ; ofsset from the topleft corner of the active area to the dots area
 adj: 0x0
 
-;start-border: 0
-
 directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
 
 solved: false
@@ -63,7 +61,7 @@ draw-board: has [ a b r c offsx offsy ][
     clear buffer
  
     collect/into [
-        ; uncomment toshow the area covered by the loop
+        ; uncomment to show the area covered by the loop
         {keep [ pen beige fill-pen beige ]
             repeat r size [
                 repeat c size [
@@ -72,7 +70,6 @@ draw-board: has [ a b r c offsx offsy ][
                 ]
             ]}
 
-    
        ; flip / rotate buttons
         keep [font num-font]
         keep [flip-btn: text 260x720 "2"]
@@ -109,8 +106,6 @@ draw-board: has [ a b r c offsx offsy ][
         
         
     ] buffer
-    
-    
 ]
 
 check-dots: func [
@@ -134,7 +129,6 @@ check-dots: func [
     ]
     true
 ]
-
 
 add-to-dot-map: func[
     segn
@@ -226,7 +220,6 @@ dir-to-rel-coords: func [
                            (size + 1) / 2.0 - (absolute (maxy - miny) / 2.0) - miny
                                      
     seg-coords/:n: (round/to size + 2 / 2.0 * dx + seg-coords/:n + centers-ofs/:n dx) + adj
-    
   
     if init = 1 [           ; arrange the segments in their starting positions
         start: at segs 3
