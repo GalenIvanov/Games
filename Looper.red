@@ -63,8 +63,7 @@ draw-board: has [ a b r c offsx offsy ][
     clear buffer
  
     collect/into [
-        ; the island itself
-        ;if solved [ 
+        ; uncomment toshow the area covered by the loop
         {keep [ pen beige fill-pen beige ]
             repeat r size [
                 repeat c size [
@@ -72,7 +71,7 @@ draw-board: has [ a b r c offsx offsy ][
                                                            (as-pair c * dx + z r * dx + z)]]
                 ]
             ]}
-        ;]
+
     
        ; flip / rotate buttons
         keep [font num-font]
