@@ -65,13 +65,13 @@ draw-board: has [ a b r c offsx offsy ][
     collect/into [
         ; the island itself
         ;if solved [ 
-        keep [ pen beige fill-pen beige ]
+        {keep [ pen beige fill-pen beige ]
             repeat r size [
                 repeat c size [
                     if board/:r/:c = 1 [keep compose [ box (as-pair c - 1 * dx + z r - 1 * dx + z)
                                                            (as-pair c * dx + z r * dx + z)]]
                 ]
-            ]
+            ]}
         ;]
     
        ; flip / rotate buttons
@@ -116,8 +116,14 @@ draw-board: has [ a b r c offsx offsy ][
 
 check-dots: func [
     /local
-    x y coord dot
+    n x y coord dot
 ][
+    occupied-dots: copy #()
+    
+    repeat n size + 1 [
+        add-to-dot-map rejoin ["seg" n]
+    ]
+    
     repeat y 8 [
         repeat x 8 [
             coord: as-pair x - 1 * 31 + 290 y - 1 * 31 + 290
@@ -130,7 +136,8 @@ check-dots: func [
     true
 ]
 
-write-to-dot-map: func[
+
+add-to-dot-map: func[
     segn
     
     /local
@@ -139,6 +146,7 @@ write-to-dot-map: func[
     st
     n
 ][
+
     dot-weights: copy [0.5 1 1 1 1 1 1 1 0.5]
     st: to word! segn
 
@@ -151,7 +159,6 @@ write-to-dot-map: func[
             ]
             
         ]
-        
 ]
 
 make-zones: func[
@@ -422,7 +429,6 @@ init-board: func [ x /local n t][
     seg-coords: random copy [5x5 255x5 505x5 5x250 505x255 5x505 255x505 505x505]
 
     canvas/parent/color: beige - 0.10.20
-    canvas/parent/text: append copy "Looper " to pair! x
 
     random/seed either empty? t: seed-field/text[now][to integer! t]
    
@@ -499,8 +505,6 @@ move-seg: func [ofs seg /local st n p rot][
             drag-start: at dir-to-rel-coords p 0 3
             flipped: 1
             flip-btn/3: ""
-            
-            ;line-color/2: yello
         ]   
 
         if any [ofs/x < 260 ofs/x > 330 ofs/y < 720 ofs/y > 790] [        
@@ -521,10 +525,9 @@ update-seg: func[ofs seg /local p st n] [
         st: to word! seg
         repeat n size + 2 [
             poke get st n + 1 (round/to (pick get st n + 1) - (dx / 2.0) dx) + adj
-            ;print [n "->" pick get st n + 1]
         ]
         
-        write-to-dot-map seg
+        ;add-to-dot-map seg
         
         drag-seg: ""
         make-zones p copy/part at get st 2 size + 2
@@ -535,7 +538,7 @@ update-seg: func[ofs seg /local p st n] [
 ]
 
 view compose [
-    title (append "Looper" " 8x8")
+    title "Looper"
 
     on-create [ 
         init-board 8
