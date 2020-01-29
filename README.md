@@ -21,3 +21,5 @@ The lines of the loop enclose an island. The island is exactly one square wide a
 Looper
 -
 <img src="Looper.jpg">
+
+Looper is a puzzle game invented by me. The goal is to arrange the lines on the grid so that they form a simple loop that covers all the dots (Technically speaking the lines will form a Hamiltonyan cycle). Drag the pieces with the left mouse button. Hover the pieces over the icons in the bottom area of the window to flip / rotate them
