@@ -4,9 +4,7 @@ Red[
     Date: 13-01-2020
     needs: View
 ]
-
 random/seed now
-
 buffer: make block! 5000
 board: make block! 5000
 b1: make block! 0000
@@ -39,6 +37,8 @@ drag-seg: ""
 drag-start: 0x0
 drag: 0x0
 
+solved: false
+
 draw-board: has [ a b r c offsx offsy ][
        
     num-font: make object! [
@@ -57,7 +57,7 @@ draw-board: has [ a b r c offsx offsy ][
     clear buffer
  
     collect/into [
-        ; uncomment toshow the area covered by the loop
+        ; uncomment to show the area covered by the loop
         {keep [ pen beige fill-pen beige ]
             repeat r size [
                 repeat c size [
@@ -112,6 +112,8 @@ check-dots: func [
             ]
         ]
     ]
+    
+    solved: true
     true
 ]
 
@@ -392,11 +394,16 @@ init-board: func [ x /local n t][
     adj: z % dx
     
     seg-coords: random copy [5x5 255x5 505x5 5x250 505x255 5x505 255x505 505x505]
+  
     canvas/parent/color: beige - 0.10.20
     random/seed either empty? t: seed-field/text[now][to integer! t]
    
     clear head board
     clear head solution
+    
+    repeat n size + 1 [
+        init-angles/:n: (random 4) - 1 * 90
+    ]
     
     collect/into [
         repeat r size [
@@ -438,7 +445,7 @@ locate-seg: func [ofs /local n segn][
 ]
 
 move-seg: func [ofs seg /local st n p rot dot1 dot2][
-    either seg <> "" [
+    either (not solved) and (seg <> "") [
     
         ofs/x: max 20 ofs/x
         ofs/x: min AW - 20 ofs/x
@@ -514,7 +521,7 @@ rotate-seg: func [
     /local
     st p n
 ][
-    if seg <> "" [
+    if (not solved) and (seg <> "") [
         st: to word! seg
         p: -48 + to integer! last seg
         init-angles/:p: init-angles/:p + (90 * step) % 360
@@ -533,7 +540,7 @@ flip-seg: func [
     seg ofs
     /local st n p
 ][
-    if seg <> "" [
+    if (not solved) and (seg <> "") [
         st: to word! seg
         p: -48 + to integer! last seg
         reverse-seg p 0
