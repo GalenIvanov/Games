@@ -4,7 +4,9 @@ Red[
     Date: 13-01-2020
     needs: View
 ]
+
 random/seed now
+
 buffer: make block! 5000
 board: make block! 5000
 b1: make block! 0000
@@ -18,6 +20,7 @@ segs: make block! 1000
 centers-ofs: make block! [0 0 0 0 0 0 0 0 ]
 seg-zones: make block! 64
 init-angles: copy [0 0 0 0 0 0 0 0]
+
 occupied-dots: copy #()
 
 AW: 800    ; size of the active area
@@ -27,7 +30,6 @@ rx: ry: 0
 dx: 0 
 z: AW - W / 2       ; ofsset from the topleft corner of the active area to the dots area
 adj: 0x0
-
 directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
 solved: false
 rotated: 0
@@ -38,6 +40,7 @@ drag-start: 0x0
 drag: 0x0
 
 draw-board: has [ a b r c offsx offsy ][
+       
     num-font: make object! [
         name: "Wingdings 3"
         size: 50
@@ -110,6 +113,11 @@ check-dots: func [
         ]
     ]
     true
+]
+
+reset-dots: does [
+    start-dot/2: -15x0
+    end-dot/2: -15x0
 ]
 
 add-to-dot-map: func[
@@ -213,8 +221,7 @@ dir-to-rel-coords: func [
 
 reverse-seg: func[
     n
-    /local
-    angs
+    /local angs
 ][
     angs: copy/part at segments size + 1 * (n - 1) + 1 size + 1
     forall angs [angs/1: -1 * angs/1]  ; 0 -> 0; -90 -> 90; 90 -> -90
@@ -223,8 +230,7 @@ reverse-seg: func[
 
 cut-segments: func [
     seg
-    /local
-    n 
+    /local n 
 ][
     clear segs
     seg-zones: copy [0 0 0 0 0 0 0 0]
@@ -235,9 +241,14 @@ cut-segments: func [
     
     collect/into [                            
         keep [line-width 9 line-color: pen white]
-        repeat n size + 1 [ keep dir-to-rel-coords n 1 ]  
+        repeat n size + 1 [ keep dir-to-rel-coords n 1 ]
+        keep compose [
+            line-width 1
+            fill-pen (beige - 0.10.20)
+            pen (beige - 0.10.20)
+            start-dot: circle -15x15 3
+            end-dot: circle -15x15 3]
     ] segs
-    
 ]
 
 get-dirs: func[borders /local ang ang-inc x y][
@@ -426,8 +437,8 @@ locate-seg: func [ofs /local n segn][
     ""
 ]
 
-move-seg: func [ofs seg /local st n p rot][
-    if seg <> "" [
+move-seg: func [ofs seg /local st n p rot dot1 dot2][
+    either seg <> "" [
     
         ofs/x: max 20 ofs/x
         ofs/x: min AW - 20 ofs/x
@@ -436,6 +447,7 @@ move-seg: func [ofs seg /local st n p rot][
         
         st: to word! seg
         p: -48 + to integer! last seg
+        
         ; rotate 
         if all [rotated = 0 ofs/x >= 500 ofs/x <= 570 ofs/y > 720 ofs/y < 790] [        
             init-angles/:p: init-angles/:p + 90 % 360
@@ -463,6 +475,23 @@ move-seg: func [ofs seg /local st n p rot][
             poke get st n + 1 drag-start/:n + ofs
         ]
     ]
+    
+    [
+        dot1: -15x15
+        dot2: -15x15
+    
+        if (seg: locate-seg ofs) <> "" [ 
+            drag-seg: ""
+            st: to word! seg
+            p: -48 + to integer! last seg
+            dot1: pick get st 2
+            dot2: pick get st 10
+        ]
+        
+        start-dot/2: dot1
+        end-dot/2: dot2
+    ]
+    
 ]
 
 update-seg: func[ofs seg /local p st n] [
@@ -473,12 +502,11 @@ update-seg: func[ofs seg /local p st n] [
         repeat n size + 2 [
             poke get st n + 1 (round/to (pick get st n + 1) - (dx / 2.0) dx) + adj
         ]
-        
         make-zones p copy/part at get st 2 size + 2
-        
         if check-dots [line-color/2: yello]
     ]
     rotated: 0
+    reset-dots
 ]
 
 rotate-seg: func [
@@ -554,7 +582,7 @@ window to flip/rotate them. ^/^/Galen Ivanov, 2020
     return below
         
     canvas: base (as-pair AW + 4 AW + 4) (beige - 0.10.20) draw [] all-over
-            on-down [locate-seg event/offset]
+            on-down [reset-dots locate-seg event/offset]
             on-over [move-seg event/offset drag-seg]
             on-up   [update-seg event/offset drag-seg  drag-seg: ""]
             on-wheel [rotate-seg locate-seg event/offset event/picked event/offset]
