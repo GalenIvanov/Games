@@ -19,6 +19,7 @@ centers-ofs: make block! [0 0 0 0 0 0 0 0 ]
 seg-zones: make block! 64
 init-angles: copy [0 0 0 0 0 0 0 0]
 occupied-dots: copy #()
+
 AW: 800    ; size of the active area
 W: 220     ; size of the grid in pixels
 size: 7    ; size of the grid - rows and columns - boxes, not points!
@@ -26,6 +27,7 @@ rx: ry: 0
 dx: 0 
 z: AW - W / 2       ; ofsset from the topleft corner of the active area to the dots area
 adj: 0x0
+
 directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
 solved: false
 rotated: 0
@@ -34,8 +36,8 @@ about-open: 1
 drag-seg: ""
 drag-start: 0x0
 drag: 0x0
+
 draw-board: has [ a b r c offsx offsy ][
-       
     num-font: make object! [
         name: "Wingdings 3"
         size: 50
