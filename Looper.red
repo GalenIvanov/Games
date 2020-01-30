@@ -4,9 +4,7 @@ Red[
     Date: 13-01-2020
     needs: View
 ]
-
 random/seed now
-
 buffer: make block! 5000
 board: make block! 5000
 b1: make block! 0000
@@ -20,9 +18,7 @@ segs: make block! 1000
 centers-ofs: make block! [0 0 0 0 0 0 0 0 ]
 seg-zones: make block! 64
 init-angles: copy [0 0 0 0 0 0 0 0]
-
 occupied-dots: copy #()
-
 AW: 800    ; size of the active area
 W: 220     ; size of the grid in pixels
 size: 7    ; size of the grid - rows and columns - boxes, not points!
@@ -30,18 +26,14 @@ rx: ry: 0
 dx: 0 
 z: AW - W / 2       ; ofsset from the topleft corner of the active area to the dots area
 adj: 0x0
-
 directions: [L: -1x0 U: 0x-1 R: 1x0 D: 0x1]
-
 solved: false
 rotated: 0
 flipped: 0
 about-open: 1
-
 drag-seg: ""
 drag-start: 0x0
 drag: 0x0
-
 draw-board: has [ a b r c offsx offsy ][
        
     num-font: make object! [
@@ -55,13 +47,12 @@ draw-board: has [ a b r c offsx offsy ][
         state: none
         parent: none
     ]
-
     offsy: dx - num-font/size / 3
     
     clear buffer
  
     collect/into [
-        ; uncomment to show the area covered by the loop
+        ; uncomment toshow the area covered by the loop
         {keep [ pen beige fill-pen beige ]
             repeat r size [
                 repeat c size [
@@ -69,7 +60,7 @@ draw-board: has [ a b r c offsx offsy ][
                                                            (as-pair c * dx + z r * dx + z)]]
                 ]
             ]}
-
+    
        ; flip / rotate buttons
         keep [font num-font]
         keep [flip-btn: text 260x720 "2"]
@@ -92,19 +83,8 @@ draw-board: has [ a b r c offsx offsy ][
         ;keep compose [ fill-pen black pen black box (as-pair rx - 3 ry - 3)
         ;                                   (as-pair rx + 3 ry + 3)]
         
-        ; labels
-        {
-        keep [font num-font]
-        foreach [x y n] labels [
-            n: to string! n
-            offsx: dx - ( num-font/size * length? n ) / 2
-            keep compose [text (as-pair x - 1 * dx + offsx + z y - 1 * dx + offsy  + z) (n)] 
-        ]
-        }
         keep [line-cap round line-join round ]
         keep segs   ; the cut segments
-        
-        
     ] buffer
 ]
 
@@ -139,10 +119,8 @@ add-to-dot-map: func[
     st
     n
 ][
-
     dot-weights: copy [0.5 1 1 1 1 1 1 1 0.5]
     st: to word! segn
-
     repeat n size + 2 [
             dot-key: pick get st n + 1
             either select occupied-dots dot-key [
@@ -150,7 +128,6 @@ add-to-dot-map: func[
             ][
                 put occupied-dots dot-key dot-weights/:n
             ]
-            
         ]
 ]
 
@@ -173,8 +150,8 @@ make-zones: func[
                     p1: start/2
                     p2: start/1
                 ]
-                keep p1 - 6 ;3x3
-                keep p2 + 6 ;3x3
+                keep p1 - 10x10
+                keep p2 + 10x10
                 n-rects: n-rects - 1
             ]
             start: next start
@@ -220,7 +197,7 @@ dir-to-rel-coords: func [
                            (size + 1) / 2.0 - (absolute (maxy - miny) / 2.0) - miny
                                      
     seg-coords/:n: (round/to size + 2 / 2.0 * dx + seg-coords/:n + centers-ofs/:n dx) + adj
-  
+
     if init = 1 [           ; arrange the segments in their starting positions
         start: at segs 3
         loop size + 2 [
@@ -229,7 +206,6 @@ dir-to-rel-coords: func [
         ]
         make-zones n at segs 3   
     ] 
-    
     segs
 ]
 
@@ -284,7 +260,6 @@ get-dirs: func[borders /local ang ang-inc x y][
             keep ang-inc
         ] 
     ] segments
-    
     cut-segments segments
 ]
 
@@ -334,16 +309,6 @@ split-island: function [ x y ] [
     ] 
 ]
 
-count-cells: func [ x y dx dy /local n ][
-    n: 0
-    while [ attempt [board/:y/:x = 1]][
-       x: x + dx 
-       y: y + dy
-       n: n + 1
-    ]
-    n
-]
-
 get-the-loop: has [ x y border a b c d x1 y1 x2 y2][
     collect/into [
         repeat y size [
@@ -363,7 +328,6 @@ get-the-loop: has [ x y border a b c d x1 y1 x2 y2][
                         ; reverse down and left edges, so that the edges can form a loop 
                         if border = #"D" [t: x1 x1: x2 x2: t]  
                         if border = #"L" [t: y1 y1: y2 y2: t]
-
                         keep as-pair x1 + z y1 + z keep as-pair x2 + z y2 + z
                         keep border                        
                     ]
@@ -383,7 +347,6 @@ shuffle-board: has [ x-one y-one x-two y-two neighbours ] [
         neighbours: get-neighbours board rx ry 1
         all [ board/:ry/:rx = 1 any [ neighbours = "LR" neighbours = "UD" ] ]
     ]
-
     board/:ry/:rx: 0  ; remove the selected box
     
     x-one: rx - 1 
@@ -406,22 +369,17 @@ shuffle-board: has [ x-one y-one x-two y-two neighbours ] [
     split-island x-two y-two
     
     new-pos: random/only next intersect free-cells-left free-cells-right
-
     board/(new-pos/2)/(new-pos/1): 1  ; update the board with the new selected cell
 ]
 
 init-board: func [ x /local n t][
-
     solved: false
-
     size: -1 + to integer! x
     dx: W / size
     adj: z % dx
     
     seg-coords: random copy [5x5 255x5 505x5 5x250 505x255 5x505 255x505 505x505]
-
     canvas/parent/color: beige - 0.10.20
-
     random/seed either empty? t: seed-field/text[now][to integer! t]
    
     clear head board
@@ -445,7 +403,6 @@ init-board: func [ x /local n t][
     loop iter [ 
         shuffle-board
     ]
-
     get-the-loop
 ]
 
@@ -464,6 +421,7 @@ locate-seg: func [ofs /local n segn][
         ]
         n: n + 1
     ]
+    ""
 ]
 
 move-seg: func [ofs seg /local st n p rot][
@@ -476,7 +434,6 @@ move-seg: func [ofs seg /local st n p rot][
         
         st: to word! seg
         p: -48 + to integer! last seg
-        
         ; rotate 
         if all [rotated = 0 ofs/x >= 500 ofs/x <= 570 ofs/y > 720 ofs/y < 790] [        
             init-angles/:p: init-angles/:p + 90 % 360
@@ -484,13 +441,11 @@ move-seg: func [ofs seg /local st n p rot][
             rotated: 1
             rot-btn/3: ""
         ] 
-        
         ; deactivate the rotation button
         if any [ofs/x < 500 ofs/x > 570 ofs/y < 720 ofs/y > 790] [        
             rot-btn/3: "Q"
             rotated: 0
         ]
-        
         ; flip
         if all[flipped = 0 ofs/x >= 260 ofs/x <= 330 ofs/y > 720 ofs/y < 790] [        
             reverse-seg p 0
@@ -498,12 +453,10 @@ move-seg: func [ofs seg /local st n p rot][
             flipped: 1
             flip-btn/3: ""
         ]   
-
         if any [ofs/x < 260 ofs/x > 330 ofs/y < 720 ofs/y > 790] [        
             flip-btn/3: "2"
             flipped: 0
         ]        
-            
         repeat n size + 2 [
             poke get st n + 1 drag-start/:n + ofs
         ]
@@ -519,9 +472,6 @@ update-seg: func[ofs seg /local p st n] [
             poke get st n + 1 (round/to (pick get st n + 1) - (dx / 2.0) dx) + adj
         ]
         
-        ;add-to-dot-map seg
-        
-        drag-seg: ""
         make-zones p copy/part at get st 2 size + 2
         
         if check-dots [line-color/2: yello]
@@ -529,9 +479,46 @@ update-seg: func[ofs seg /local p st n] [
     rotated: 0
 ]
 
+rotate-seg: func [
+    seg step ofs
+    /local
+    st p n
+][
+    if seg <> "" [
+        st: to word! seg
+        p: -48 + to integer! last seg
+        init-angles/:p: init-angles/:p + (90 * step) % 360
+        drag-start: at dir-to-rel-coords p 0 3
+        
+        repeat n size + 2 [
+            poke get st n + 1 drag-start/:n + ofs
+        ]
+        update-seg ofs drag-seg
+        drag-seg: ""
+        if check-dots [line-color/2: yello]
+    ]
+]
+
+flip-seg: func [
+    seg ofs
+    /local st n p
+][
+    if seg <> "" [
+        st: to word! seg
+        p: -48 + to integer! last seg
+        reverse-seg p 0
+        drag-start: at dir-to-rel-coords p 0 3
+        repeat n size + 2 [
+            poke get st n + 1 drag-start/:n + ofs
+        ]
+        update-seg ofs drag-seg        
+        drag-seg: ""
+        if check-dots [line-color/2: yello]
+    ]
+]
+
 view compose [
     title "Looper"
-
     on-create [ 
         init-board 8
         append clear canvas/draw draw-board
@@ -552,8 +539,10 @@ view compose [
             about-open: 0
             view [
                 title "About Looper"
-                text {The objective is to arrange the lines in a simple loop
-that covers all the dots. ^/^/Galen Ivanov, 2020
+                text {The objective is to arrange the lines in a simple loop that covers
+all the dots. Right click flips the piece, the wheel rotates it.
+You can also hover the pieces over the icons at the bottom of the
+window to flip/rotate them. ^/^/Galen Ivanov, 2020
 }
                 button "Close" [ about-open: 1 unview ]
             ]
@@ -565,5 +554,7 @@ that covers all the dots. ^/^/Galen Ivanov, 2020
     canvas: base (as-pair AW + 4 AW + 4) (beige - 0.10.20) draw [] all-over
             on-down [locate-seg event/offset]
             on-over [move-seg event/offset drag-seg]
-            on-up   [update-seg event/offset drag-seg]
+            on-up   [update-seg event/offset drag-seg  drag-seg: ""]
+            on-wheel [rotate-seg locate-seg event/offset event/picked event/offset]
+            on-alt-up [flip-seg locate-seg event/offset event/offset]
 ] 
