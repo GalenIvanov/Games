@@ -4,7 +4,9 @@ Red[
     Date: 13-01-2020
     needs: View
 ]
+
 random/seed now
+
 buffer: make block! 5000
 board: make block! 5000
 b1: make block! 0000
@@ -162,8 +164,8 @@ make-zones: func[
                     p1: start/2
                     p2: start/1
                 ]
-                keep p1 - 10x10
-                keep p2 + 10x10
+                keep p1 - 15x15
+                keep p2 + 15x15
                 n-rects: n-rects - 1
             ]
             start: next start
@@ -574,16 +576,16 @@ view compose [
     info: btn "About" on-up [ 
         if about-open = 1 [
             about-open: 0
-            view [
+            view/no-wait [
                 title "About Looper"
                 text {The objective is to arrange the lines in a simple loop that covers
 all the dots. Right click flips the piece, the wheel rotates it.
 You can also hover the pieces over the icons at the bottom of the
 window to flip/rotate them. ^/^/Galen Ivanov, 2020
 }
-                button "Close" [ about-open: 1 unview ]
+                button "Close" [ unview about-open: 1]
             ]
-        ]    
+        ]
     ] on-over [info/color: info/color xor 10.10.10]
     
     return below
