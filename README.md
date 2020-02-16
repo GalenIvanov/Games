@@ -22,4 +22,4 @@ Looper
 -
 <img src="Looper.jpg">
 
-Looper is a puzzle game invented by me. The goal is to arrange the lines on the grid so that they form a simple loop that covers all the dots (Technically speaking the lines will form a Hamiltonian cycle). Drag the pieces with the left mouse button. Hover the pieces over the icons in the bottom area of the window to flip / rotate them. You can alternatively flip the pieces with the right mouse button and rotate them with the mouse wheel.
+Looper is a puzzle game invented by me. The goal is to arrange the lines on the grid so that they form a simple loop that covers all the dots (Technically speaking the lines will form a Hamiltonian cycle). Drag the pieces with the left mouse button. Hover the pieces over the icons in the bottom area of the window to flip / rotate them. You can alternatively flip the pieces with the right mouse button and rotate them with the mouse wheel. [Video](https://www.youtube.com/watch?v=emjGl_HVc70&t=7s)
