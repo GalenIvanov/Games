@@ -6,6 +6,8 @@ Red[
    Needs: 'view
 ]
 
+selected-poly: none
+
 ; polygons with relative coords 1..100 - to be scaled according to the resolution
 polygons: [
     [1x1 50x50 1x100]
@@ -31,14 +33,14 @@ point-in-poly?: func[
 	    y: poly/:i/y
 		x2: poly2/:i/x
 		y2: poly2/:i/y
-	
-	    if y > y2 [    ; swap the points if the first point is "higher" then the second one
+	    ; swap the points if the first point is "higher" then the second one
+	    if y > y2 [    
 		   set [x y x2 y2] reduce[x2 y2 x y]
 		]
-	
+		
 	    t1: x2 - x / to float! (y2 - y)
 		t2: p/x - x / to float! (p/y - y)
-     
+		
 		if all [
 		    y <= p/y
  			p/y < y2
@@ -50,7 +52,22 @@ point-in-poly?: func[
     cross
 ]
 
-select-poly: func[
+get-poly: func[
+    offs
+	/local i poly-word
+][
+    selected-poly: none
+    repeat i length? polygons [
+	    poly-word: to word! rejoin ["poly" i]
+		if point-in-poly? offs polygons/:i[
+		    selected-poly: poly-word
+			break
+		]
+	]	
+	msg/text: form selected-poly
+]
+
+hilight-poly: func[
     offs
 	/local i poly-word
 ][
@@ -74,7 +91,10 @@ polys: collect[
 ]
 
 view [title "Tangram"
+    below
     base 300x300 snow draw compose [(polys)]
 	all-over
-	on-over [select-poly event/offset]
+	on-over [hilight-poly event/offset]
+	on-down [get-poly event/offset] 
+	msg: text "none"
 ]
