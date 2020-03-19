@@ -40,7 +40,7 @@ point-in-poly?: func[
 		t2: p/x - x / to float! (p/y - y)
      
 		if all [
-		    y < p/y
+		    y <= p/y
  			p/y < y2
 			t1 < t2
 		][
