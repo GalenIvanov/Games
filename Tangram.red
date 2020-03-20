@@ -7,6 +7,11 @@ Red[
 ]
 
 selected-poly: none
+poly-n: 0
+drag: off
+drag-coords: []
+start-drag: 0
+
 
 ; polygons with relative coords 1..100 - to be scaled according to the resolution
 polygons: [
@@ -61,9 +66,14 @@ get-poly: func[
 	    poly-word: to word! rejoin ["poly" i]
 		if point-in-poly? offs polygons/:i[
 		    selected-poly: poly-word
+			poly-n: i
+			drag: on
+			start-drag: offs
+			drag-coords: copy polygons/:i
 			break
 		]
 	]	
+	
 	msg/text: form selected-poly
 ]
 
@@ -79,7 +89,32 @@ hilight-poly: func[
 		    beige
 		]
 	]
+	
+	if drag [
+	    p: at get selected-poly 4
+		repeat i length? drag-coords [
+		    p/:i: drag-coords/:i - start-drag + offs
+		]
+	]
 ]
+
+update-polys: func[
+    offs
+	/local i p
+][
+    if drag[
+	    i: 1
+		p: at get selected-poly 4 
+	    forall drag-coords[
+		    drag-coords/1: drag-coords/1 - start-drag + offs
+			p/:i: drag-coords/1
+			i: i + 1
+		]
+		change/only at polygons poly-n drag-coords
+	    drag: off
+	]
+]
+
 
 polys: collect[
     repeat i length? polygons [
@@ -95,6 +130,7 @@ view [title "Tangram"
     base 300x300 snow draw compose [(polys)]
 	all-over
 	on-over [hilight-poly event/offset]
-	on-down [get-poly event/offset] 
+	on-down [get-poly event/offset]
+    on-up [update-polys event/offset]	 
 	msg: text "none"
 ]
