@@ -79,22 +79,51 @@ get-poly: func[
 
 hilight-poly: func[
     offs
-	/local i poly-word
+	/local i p v poly-word temp-coords collision
 ][
     repeat i length? polygons [
 		poly-word: to word! rejoin ["poly" i]
 	    change at get poly-word 2 either point-in-poly? offs polygons/:i [
-			red
+			green
 		][
 		    beige
 		]
 	]
 	
+	collision: false
+	
 	if drag [
-	    p: at get selected-poly 4
-		repeat i length? drag-coords [
-		    p/:i: drag-coords/:i - start-drag + offs
+	    temp-coords: copy drag-coords
+	    repeat i length? drag-coords [
+		    temp-coords/:i: drag-coords/:i - start-drag + offs
+			; check if each point of the current poly lies in any of the polygons
+			foreach p polygons [
+			    if point-in-poly? temp-coords/:i p [
+				    collision: true
+                    break  					
+				]
+			]
+			if collision [break]
 		]
+		
+		if not collision [
+		    ; check if each vertex of each poly lies within the current poly
+		    foreach p polygons [
+			    foreach v p [
+				    if point-in-poly? v temp-coords [
+					    collision: true
+						break
+					]
+				]
+			]			
+		
+		    if not collision [
+           		p: at get selected-poly 4
+           		repeat i length? drag-coords [
+           		    p/:i: drag-coords/:i - start-drag + offs
+           		]
+			]
+		]	
 	]
 ]
 
