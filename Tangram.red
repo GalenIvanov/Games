@@ -98,8 +98,9 @@ hilight-poly: func[
 		    temp-coords/:i: drag-coords/:i - start-drag + offs
 			; check if each point of the current poly lies in any of the polygons
 			foreach p polygons [
-			    if point-in-poly? temp-coords/:i p [
+			    if all [p <> drag-coords point-in-poly? temp-coords/:i p] [
 				    collision: true
+					msg/text: "Collision!"
                     break  					
 				]
 			]
@@ -109,14 +110,17 @@ hilight-poly: func[
 		if not collision [
 		    ; check if each vertex of each poly lies within the current poly
 		    foreach p polygons [
-			    foreach v p [
-				    if point-in-poly? v temp-coords [
-					    collision: true
-						break
+			    if p <> drag-coords [
+					foreach v p [
+						if point-in-poly? v temp-coords [
+							collision: true
+							break
+						]
 					]
 				]
-			]			
-		
+				if collision [break]		
+			]
+
 		    if not collision [
            		p: at get selected-poly 4
            		repeat i length? drag-coords [
@@ -143,7 +147,6 @@ update-polys: func[
 	    drag: off
 	]
 ]
-
 
 polys: collect[
     repeat i length? polygons [
