@@ -11,17 +11,18 @@ poly-n: 0
 drag: off
 drag-coords: []
 start-drag: 0
+temp-coords: []
 
 
-; polygons with relative coords 1..100 - to be scaled according to the resolution
+; polygons with relative coords 1..200 - to be scaled according to the resolution
 polygons: [
-    [1x1 50x50 1x100]
-    [1x1 100x1 50x50]
-	[100x1 100x50 75x75 75x25]
-	[100x50 100x100 50x100]
-	[1x100 25x75 50x100]
-	[50x50 75x75 50x100 25x75]
-	[50x50 75x25 75x75]
+    [1x1 100x100 1x200]
+    [1x1 200x1 100x100]
+	[200x1 200x100 150x150 150x50]
+	[200x100 200x200 100x200]
+	[1x200 50x150 100x200]
+	[100x100 150x150 100x200 50x150]
+	[100x100 150x50 150x150]
 ]
 
 point-in-poly?: func[
@@ -79,7 +80,7 @@ get-poly: func[
 
 hilight-poly: func[
     offs
-	/local i p v poly-word temp-coords collision
+	/local i p v poly-word collision
 ][
     repeat i length? polygons [
 		poly-word: to word! rejoin ["poly" i]
@@ -91,6 +92,7 @@ hilight-poly: func[
 	]
 	
 	collision: false
+	coll-offs: -1000
 	
 	if drag [
 	    temp-coords: copy drag-coords
@@ -124,7 +126,7 @@ hilight-poly: func[
 		    if not collision [
            		p: at get selected-poly 4
            		repeat i length? drag-coords [
-           		    p/:i: drag-coords/:i - start-drag + offs
+					p/:i: temp-coords/:i
            		]
 			]
 		]	
@@ -139,14 +141,16 @@ update-polys: func[
 	    i: 1
 		p: at get selected-poly 4 
 	    forall drag-coords[
-		    drag-coords/1: drag-coords/1 - start-drag + offs
+		    drag-coords/1: round/to drag-coords/1 - start-drag + offs 25
 			p/:i: drag-coords/1
 			i: i + 1
 		]
+		
 		change/only at polygons poly-n drag-coords
 	    drag: off
 	]
 ]
+
 
 polys: collect[
     repeat i length? polygons [
@@ -159,7 +163,7 @@ polys: collect[
 
 view [title "Tangram"
     below
-    base 300x300 snow draw compose [(polys)]
+    base 500x500 snow draw compose [(polys)]
 	all-over
 	on-over [hilight-poly event/offset]
 	on-down [get-poly event/offset]
