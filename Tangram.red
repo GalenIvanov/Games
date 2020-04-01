@@ -6,6 +6,8 @@ Red[
    Needs: 'view
 ]
 
+random/seed now
+
 selected-poly: none
 poly-n: 0
 drag: off
@@ -15,33 +17,32 @@ temp-coords: []
 
 ; polygons with relative coords 1..200 - to be scaled according to the resolution
 polygons: [
-    [0x0 100x100 0x200]
-    [0x0 200x0 100x100]
-    [200x0 200x100 150x150 150x50]
-    [200x100 200x200 100x200]
-    [0x200 50x150 100x200]
-    [100x100 150x150 100x200 50x150]
-    [100x100 150x50 150x150]
+    [0 0 100 100 0 200]
+    [0 0 200 0 100 100]
+    [200 0 200 100 150 150 150 50]
+    [200 100 200 200 100 200]
+    [0 200 50 150 100 200]
+    [100 100 150 150 100 200 50 150]
+    [100 100 150 50 150 150]
 ]
 
-angles: [0 0 0 0 0 0 0]
 
 point-in-poly?: func[
     p [pair!]  "The point to be tested"
-    poly [block!] "A block of pairs, describing the polygon"
+    poly [block!] "A block of coords, describing the polygon"
     /local poly2 i y x y2 x2 cross
 ][
     cross: off
     poly2: copy poly
-    move poly2 tail poly2
+    move/part poly2 tail poly2 2
     
-    repeat i length? poly [
-        x: poly/:i/x
-        y: poly/:i/y
-        x2: poly2/:i/x
-        y2: poly2/:i/y
+    repeat i (length? poly) / 2 [
+        x: poly/(2 * i - 1)
+        y: poly/(2 * i)
+        x2: poly2/(2 * i - 1)
+        y2: poly2/(2 * i)
         ; swap the points if the first point is "higher" then the second one
-        if y > y2 [    
+        if y > y2 [ 
            set [x y x2 y2] reduce[x2 y2 x y]
         ]
         
@@ -60,12 +61,12 @@ point-in-poly?: func[
 ]
 
 collision?: has [
-    p v 
+    p vx vy 
 ][
     ; check if each point of the current poly lies in any of the polygons
-    foreach v temp-coords [
+    foreach [vx vy] temp-coords [
         foreach p polygons [
-            if all [p <> drag-coords point-in-poly? v p][
+            if all [p <> drag-coords point-in-poly? as-pair vx vy p][
                 return true
             ]
         ]
@@ -73,8 +74,8 @@ collision?: has [
     ; check if each vertex of each poly lies within the current poly
     foreach p polygons [
         if p <> drag-coords [
-            foreach v p [
-                if point-in-poly? v temp-coords [
+            foreach [vx vy] p [
+                if point-in-poly? as-pair vx vy temp-coords [
                     return true
                 ]
             ]
@@ -84,20 +85,20 @@ collision?: has [
 ]
 
 snap-to-vertex: has[
-     d dx dy p v c delta offs
+     d dx dy p vx vy cx cy delta offs
 ][
     delta: 25
-    offs: 0
-    foreach v drag-coords [
+    offs: 0x0
+    foreach [vx vy] drag-coords [
         foreach p polygons [
             if p <> drag-coords [
-                foreach c p [
-                    dx: v/x - c/x
-                    dy: v/y - c/y
+                foreach [cx cy] p [
+                    dx: vx - cx
+                    dy: vy - cy
                     d: sqrt dx * dx + (dy * dy)
                     if d < delta [ 
                         delta: d
-                        offs:  c - v
+                        offs: as-pair cx - vx cy - vy
                     ]
                 ]
             ]
@@ -116,7 +117,7 @@ get-poly: func[
     /local i poly-word
 ][
     selected-poly: none
-    repeat i length? polygons [
+    repeat i length? polygons[
         poly-word: to word! rejoin ["poly" i]
         if point-in-poly? offs polygons/:i[
             selected-poly: poly-word
@@ -127,7 +128,7 @@ get-poly: func[
             break
         ]
     ]    
-    ;msg/text: form selected-poly
+    msg/text: form selected-poly
 ]
 
 move-poly: func[
@@ -136,13 +137,14 @@ move-poly: func[
 ][
     if drag [
         temp-coords: copy drag-coords
-        repeat i length? drag-coords [
-            temp-coords/:i: drag-coords/:i - start-drag + offs
+        repeat i (length? drag-coords) / 2 [
+            temp-coords/(2 * i - 1): drag-coords/(2 * i - 1) - start-drag/x + offs/x
+			temp-coords/(2 * i): drag-coords/(2 * i) - start-drag/y + offs/y
         ]
         if not collision? [
-               p: at get selected-poly 4
-               repeat i length? drag-coords [
-                p/:i: temp-coords/:i
+            p: at get selected-poly 4
+            repeat i (length? drag-coords) / 2 [
+                p/:i: as-pair temp-coords/(2 * i - 1) temp-coords/(2 * i)
             ]
         ]
     ]
@@ -153,38 +155,40 @@ fine-average: func[
     /local sum-x sum-y size
 ][
     sum-x: sum-y: 0
-    size: to float! length? points
-    foreach p points [
-        sum-x: sum-x + p/x
-        sum-y: sum-y + p/y
+    size: to float! (length? points) / 2
+    foreach [x y] points [
+        sum-x: sum-x + x
+        sum-y: sum-y + y
     ]
     reduce [ sum-x / size sum-y / size ]
 ]
 
-; rounding erors!!!
-; I need to keep the original coords and separately the angles of rotation
-; and rotate the polys starting from the original coods 
-; and update the angles respectively 
 rotate-poly: func[
     offs direction
-    /local i p center-x center-y dx dy angle radius x y 
+    /local center-x center-y dx dy angle radius x y p
 ][
-    drag: off
     start-drag: offs 
     get-poly offs
+	drag: off
     
     if selected-poly [
-        set[center-x center-y] fine-average drag-coords
-        forall drag-coords [
-            dx: drag-coords/1/x - center-x
-            dy: drag-coords/1/y - center-y
-            angle: 45 * direction - arctangent2 dy dx
+		temp-coords: copy drag-coords
+		set[center-x center-y] fine-average temp-coords
+        repeat i (length? drag-coords) / 2 [
+            dx: temp-coords/(2 * i - 1) - center-x
+            dy: temp-coords/(2 * i) - center-y
+            angle: 15 * direction - arctangent2 dy dx
             radius: sqrt dx * dx + (dy * dy)
-            x: round/down center-x + (radius * cosine angle) + 0.49
-            y: round/down center-y - (radius * sine angle) + 0.49
-            drag-coords/1: as-pair x y
+            x: center-x + (radius * cosine angle)
+            y: center-y - (radius * sine angle)
+			temp-coords/(2 * i - 1): x
+			temp-coords/(2 * i): y
         ]
-        update-polys offs
+		
+		if not collision? [
+			drag: on
+		    update-polys offs
+		]
     ]
 ]
 
@@ -194,39 +198,37 @@ update-polys: func[
 ][
     if drag[
         p: at get selected-poly 4
-
-        forall drag-coords[
-            ;drag-coords/1: round/down/to drag-coords/1 - start-drag + offs + 12.5 25
-            drag-coords/1: drag-coords/1 - start-drag + offs
-             ;p/:i: drag-coords/1
-            ;i: i + 1
+	
+        repeat i (length? drag-coords) / 2 [
+		    drag-coords/(2 * i - 1): temp-coords/(2 * i - 1)
+			drag-coords/(2 * i): temp-coords/(2 * i)
         ]
-        
-        snap: snap-to-vertex 
-        
-        i: 1
-        forall drag-coords[
-            drag-coords/1: drag-coords/1 + snap
-             p/:i: drag-coords/1 
-            i: i + 1
+        snap: snap-to-vertex
+        repeat i (length? drag-coords) / 2 [
+            drag-coords/(2 * i - 1): drag-coords/(2 * i - 1) + snap/x
+			drag-coords/(2 * i): drag-coords/(2 * i) + snap/y
+            p/:i: as-pair drag-coords/(2 * i - 1) drag-coords/(2 * i)
         ]
-                
+		
         change/only at polygons poly-n drag-coords
         drag: off
     ]
 ]
 
 polys: collect[
-    keep [line-width 3 line-join round]
+    keep [line-width 4 pen white line-join round]
     repeat i length? polygons [
         keep to set-word! rejoin ["poly" i]
-        keep compose [fill-pen beige polygon (polygons/:i)]
+        keep compose [fill-pen (255.228.196 - random 25.25.25) polygon]
+		repeat j (length? polygons/:i) / 2[
+		    keep as-pair polygons/:i/(2 * j - 1) polygons/:i/(2 * j)
+		]
     ]
 ]
 
 view [title "Tangram"
     below
-    base 500x500 snow draw compose [(polys)]
+    base 600x500 snow draw compose [(polys)]
     all-over
     on-over [move-poly event/offset]
     on-down [get-poly event/offset]
