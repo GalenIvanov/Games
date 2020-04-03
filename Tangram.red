@@ -15,7 +15,7 @@ temp-coords: []
 
 polygons: [
     [200 200 300 300 200 400]
-	[200 200 400 200 300 300]
+    [200 200 400 200 300 300]
     [400 200 400 300 350 350 350 250]
     [400 300 400 400 300 400]
     [200 400 250 350 300 400]
@@ -168,6 +168,7 @@ rotate-poly: func[
     offs direction
     /local center-x center-y dx dy angle radius x y p
 ][
+    print direction
     get-poly offs
     drag: off
     
@@ -237,4 +238,5 @@ view [title "Tangram"
     on-down [get-poly event/offset]
     on-up [update-polys event/offset]
     on-wheel [rotate-poly event/offset event/picked]
+    focus
 ]
