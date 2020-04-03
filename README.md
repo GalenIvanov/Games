@@ -26,6 +26,6 @@ Looper is a puzzle game invented by me. The goal is to arrange the lines on the 
 
 Tangram
 -
+<img src="Tangram.png">
 
 An interactive tangram puzzle.
-<img src="Tangram.png">
