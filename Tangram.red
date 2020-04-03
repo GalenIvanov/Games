@@ -15,7 +15,7 @@ temp-coords: []
 
 polygons: [
     [200 200 300 300 200 400]
-    [200 200 400 200 300 300]
+	[200 200 400 200 300 300]
     [400 200 400 300 350 350 350 250]
     [400 300 400 400 300 400]
     [200 400 250 350 300 400]
@@ -231,7 +231,7 @@ polys: collect[
 
 view [title "Tangram"
     below
-    base 600x600 snow draw compose [(polys)]
+    base 600x600 snow draw polys
     all-over
     on-over [move-poly event/offset]
     on-down [get-poly event/offset]
