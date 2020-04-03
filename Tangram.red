@@ -168,7 +168,6 @@ rotate-poly: func[
     offs direction
     /local center-x center-y dx dy angle radius x y p
 ][
-    print direction
     get-poly offs
     drag: off
     
