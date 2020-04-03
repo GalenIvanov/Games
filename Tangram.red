@@ -1,5 +1,3 @@
-;http://alienryderflex.com/polygon/
-
 Red[
    Title: "Interactive Tangram puzzle"
    Author: "Galen Ivanov"
@@ -15,17 +13,15 @@ drag-coords: []
 start-drag: 0
 temp-coords: []
 
-; polygons with relative coords 1..200 - to be scaled according to the resolution
 polygons: [
-    [0 0 100 100 0 200]
-    [0 0 200 0 100 100]
-    [200 0 200 100 150 150 150 50]
-    [200 100 200 200 100 200]
-    [0 200 50 150 100 200]
-    [100 100 150 150 100 200 50 150]
-    [100 100 150 50 150 150]
+    [200 200 300 300 200 400]
+	[200 200 400 200 300 300]
+    [400 200 400 300 350 350 350 250]
+    [400 300 400 400 300 400]
+    [200 400 250 350 300 400]
+    [300 300 350 350 300 400 250 350]
+    [300 300 350 250 350 350]
 ]
-
 
 point-in-poly?: func[
     p [pair!]  "The point to be tested"
@@ -112,6 +108,19 @@ snap-to-edge: has [
  
 ]
 
+fine-average: func[
+    points
+    /local sum-x sum-y size
+][
+    sum-x: sum-y: 0
+    size: to float! (length? points) / 2
+    foreach [x y] points [
+        sum-x: sum-x + x
+        sum-y: sum-y + y
+    ]
+    reduce [ sum-x / size sum-y / size ]
+]
+
 get-poly: func[
     offs
     /local i poly-word
@@ -128,7 +137,6 @@ get-poly: func[
             break
         ]
     ]    
-    msg/text: form selected-poly
 ]
 
 move-poly: func[
@@ -136,10 +144,16 @@ move-poly: func[
     /local i p v poly-word
 ][
     if drag [
+	
+        offs/x: max 20 offs/x
+        offs/x: min 580 offs/x
+        offs/y: max 20 offs/y
+        offs/y: min 580 offs/y
+		
         temp-coords: copy drag-coords
         repeat i (length? drag-coords) / 2 [
             temp-coords/(2 * i - 1): drag-coords/(2 * i - 1) - start-drag/x + offs/x
-			temp-coords/(2 * i): drag-coords/(2 * i) - start-drag/y + offs/y
+            temp-coords/(2 * i): drag-coords/(2 * i) - start-drag/y + offs/y
         ]
         if not collision? [
             p: at get selected-poly 4
@@ -150,30 +164,16 @@ move-poly: func[
     ]
 ]
 
-fine-average: func[
-    points
-    /local sum-x sum-y size
-][
-    sum-x: sum-y: 0
-    size: to float! (length? points) / 2
-    foreach [x y] points [
-        sum-x: sum-x + x
-        sum-y: sum-y + y
-    ]
-    reduce [ sum-x / size sum-y / size ]
-]
-
 rotate-poly: func[
     offs direction
     /local center-x center-y dx dy angle radius x y p
 ][
-    start-drag: offs 
     get-poly offs
-	drag: off
+    drag: off
     
     if selected-poly [
-		temp-coords: copy drag-coords
-		set[center-x center-y] fine-average temp-coords
+        temp-coords: copy drag-coords
+        set[center-x center-y] fine-average temp-coords
         repeat i (length? drag-coords) / 2 [
             dx: temp-coords/(2 * i - 1) - center-x
             dy: temp-coords/(2 * i) - center-y
@@ -181,14 +181,14 @@ rotate-poly: func[
             radius: sqrt dx * dx + (dy * dy)
             x: center-x + (radius * cosine angle)
             y: center-y - (radius * sine angle)
-			temp-coords/(2 * i - 1): x
-			temp-coords/(2 * i): y
+            temp-coords/(2 * i - 1): x
+            temp-coords/(2 * i): y
         ]
-		
-		if not collision? [
-			drag: on
-		    update-polys offs
-		]
+        
+        if not collision? [
+            drag: on
+            update-polys offs
+        ]
     ]
 ]
 
@@ -198,41 +198,43 @@ update-polys: func[
 ][
     if drag[
         p: at get selected-poly 4
-	
+    
         repeat i (length? drag-coords) / 2 [
-		    drag-coords/(2 * i - 1): temp-coords/(2 * i - 1)
-			drag-coords/(2 * i): temp-coords/(2 * i)
-        ]
-        snap: snap-to-vertex
-        repeat i (length? drag-coords) / 2 [
-            drag-coords/(2 * i - 1): drag-coords/(2 * i - 1) + snap/x
-			drag-coords/(2 * i): drag-coords/(2 * i) + snap/y
-            p/:i: as-pair drag-coords/(2 * i - 1) drag-coords/(2 * i)
+            drag-coords/(2 * i - 1): temp-coords/(2 * i - 1)
+            drag-coords/(2 * i): temp-coords/(2 * i)
         ]
 		
+        snap: snap-to-vertex
+		
+        repeat i (length? drag-coords) / 2 [
+            drag-coords/(2 * i - 1): drag-coords/(2 * i - 1) + snap/x
+            drag-coords/(2 * i): drag-coords/(2 * i) + snap/y
+            p/:i: as-pair drag-coords/(2 * i - 1) drag-coords/(2 * i)
+        ]
+        
         change/only at polygons poly-n drag-coords
         drag: off
     ]
 ]
 
 polys: collect[
+    
     keep [line-width 4 pen white line-join round]
     repeat i length? polygons [
         keep to set-word! rejoin ["poly" i]
         keep compose [fill-pen (255.228.196 - random 25.25.25) polygon]
-		repeat j (length? polygons/:i) / 2[
-		    keep as-pair polygons/:i/(2 * j - 1) polygons/:i/(2 * j)
-		]
+        repeat j (length? polygons/:i) / 2 [
+            keep as-pair polygons/:i/(2 * j - 1) polygons/:i/(2 * j)
+        ]
     ]
 ]
 
 view [title "Tangram"
     below
-    base 600x500 snow draw compose [(polys)]
+    base 600x600 snow draw compose [(polys)]
     all-over
     on-over [move-poly event/offset]
     on-down [get-poly event/offset]
     on-up [update-polys event/offset]
     on-wheel [rotate-poly event/offset event/picked]
-    msg: text "none"
 ]
