@@ -42,28 +42,32 @@ arrange-tiles: has [
     n row col offs bit clr tri   
 ][
     n: 1
-	repeat row 8 [
-	    repeat col 8 [
-			offs: as-pair col - 1 * 40 + grid-offs/x
+    repeat row 8 [
+        repeat col 8 [
+            offs: as-pair col - 1 * 40 + grid-offs/x
                           row - 1 * 40 + grid-offs/y
-			bit: 1
-			foreach t triangles [
-				clr: pick scheme -47 + tiles/:n/:bit
-				append tiles-block compose [
-				    (to set-word! rejoin ["tile" n])
-				    pen (clr) fill-pen (clr)
-					polygon (t/1 + offs) (t/2 + offs) (t/3 + offs)
-				]
-			    bit: bit + 1
-			]
-			append tiles-coords offs
-		    n: n + 1
-		]
-	]
+            bit: 1
+            foreach t triangles [
+                clr: pick scheme -47 + tiles/:n/:bit
+                append tiles-block compose [
+                    (to set-word! rejoin ["tile" n])
+                    pen 255.240.120.255 fill-pen (clr)
+                    polygon (t/1 + offs) (t/2 + offs) (t/3 + offs)
+                    pen (sky + 10) fill-pen (sky - 10) box (offs + 360x0) (offs + 400x40)
+                ]
+                bit: bit + 1
+            ]
+            append tiles-coords offs
+            n: n + 1
+        ]
+    ]
 ]
 
 gen-tiles
 arrange-tiles
 
-view compose[base (sky - 15) 400x400 draw tiles-block ]
+view compose [
+    Title "Izzi puzzle"
+    base (sky - 15) 760x360 draw tiles-block
+]
 
