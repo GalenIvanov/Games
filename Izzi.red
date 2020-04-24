@@ -77,7 +77,7 @@ arrange-tiles: has [
             ]    
         ]    
     ]
-    ;tiles
+    ; tiles
     n: 1    
     repeat row 8 [
         repeat col 8 [
@@ -106,27 +106,44 @@ move-tile: func [ offs ] [
         if p: select tiles-coords coord [
             poke marker 8 coord
             poke marker 9 coord + 40
-            dragged: coord
-            selected: p
         ]    
     ]
 ]
 
 start-move: func [ offs ][
-    if all [selected not drag][
-        start-offs: offs
+    if p: select tiles-coords coord [
+        dragged: coord
+        selected: p
+        start-offs: round/to offs - 20 40
         drag: on
     ]
 ]
 
-update-tile: func [ offs ][
+update-tile: func [ 
+    offs
+    /local stop-offs tmp-offs t-id start row col
+][
+    stop-offs: start-offs
     if selected [
-        stop-drag: round/to offs - 20 40
-        if not select tiles-coords stop-drag [
+        tmp-offs: round/to offs - 20 40
+        if not select tiles-coords tmp-offs [
+            stop-offs: tmp-offs
             remove/key tiles-coords dragged
-            put tiles-coords stop-drag selected
+            put tiles-coords stop-offs selected
         ]
+        
+        t-id: to word! rejoin ["tile" selected]
+        start: find/tail get t-id 'polygon
+        repeat row 8 [
+            repeat col 3 [
+                start/1: triangles/:row/:col + stop-offs
+                start: next start
+            ]
+            start: find/tail start 'polygon
+        ]
+        
         drag: off
+        selected: none
     ]    
 ]
 
