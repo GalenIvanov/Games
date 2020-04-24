@@ -110,10 +110,11 @@ move-tile: func [ offs ] [
         ]
     ][
         coord: round/to offs - 20 40 
-        if p: select tiles-coords coord [
-            poke marker 8 coord
-            poke marker 9 coord + 40
+        unless p: select tiles-coords coord [
+            coord: -40x-40
         ]    
+         poke marker 8 coord
+         poke marker 9 coord + 40
     ]
 ]
 
@@ -160,6 +161,25 @@ update-tile: func [
     ]    
 ]
 
+rotate-tile: func [
+   offs  dr
+   /local n coord tile t-id
+][
+    coord: round/to offs - 20 40
+    if n: select tiles-coords coord [
+        tile: tiles/:n
+        either dr = -1 [
+            move/part at tile 7 tile 2
+        ][
+            move/part tile tail tile 2
+        ]
+        tiles/:n: tile
+        tile: make-tile n round/to offs - 20 40
+        t-id: get take tile
+        change/part t-id tile length? tile
+    ]
+]
+
 gen-tiles
 arrange-tiles
 append tiles-block [ marker: line-width 3
@@ -174,4 +194,6 @@ view compose [
     on-over [move-tile event/offset]
     on-down [start-move event/offset]
     on-up [update-tile event/offset]
+    on-wheel [rotate-tile event/offset event/picked]
+    focus
 ]
