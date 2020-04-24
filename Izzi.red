@@ -5,11 +5,15 @@ Red [
 
 tiles: make block! 64
 tiles-block: make block! 64
-tiles-coords: make block! 64
+tiles-coords: make map! 64
 grid-offs: 40x40
-scheme: [sky beige]
 
-selected: 0
+start-offs: 0
+drag: off
+
+scheme: [164.200.250.255 beige]
+
+selected: none
 
 triangles: [
     [0x0 20x0 20x20]
@@ -45,14 +49,13 @@ make-tile: function [
     offs
 ][
     bit: 1
-    collect/into [ 
+    collect/into [
+        keep (to set-word! rejoin ["tile" n])    
         foreach t triangles [
             clr: pick scheme -47 + tiles/:n/:bit
             keep compose [
-                (to set-word! rejoin ["tile" n])
-                pen 255.240.120.255 fill-pen (clr)
+                pen 255.240.120.230 fill-pen (clr)
                 polygon (t/1 + offs) (t/2 + offs) (t/3 + offs)
-                pen (sky + 10) fill-pen (sky - 10) box (offs + 360x0) (offs + 400x40)
             ]
             bit: bit + 1
         ]
@@ -62,35 +65,81 @@ make-tile: function [
 arrange-tiles: has [
     n row col offs   
 ][
-    n: 1
+    ; grid
+    repeat row 8 [
+        repeat col 8 [
+            offs: as-pair col - 1 * 40 + grid-offs/x
+                          row - 1 * 40 + grid-offs/y
+            append tiles-block compose [
+                pen (sky + 10)
+                fill-pen (sky - 10)
+                box (offs + 360x0) (offs + 400x40)
+            ]    
+        ]    
+    ]
+    ;tiles
+    n: 1    
     repeat row 8 [
         repeat col 8 [
             offs: as-pair col - 1 * 40 + grid-offs/x
                           row - 1 * 40 + grid-offs/y
             append tiles-block make-tile n offs
-            append tiles-coords offs
+            put tiles-coords offs n
             n: n + 1
         ]
     ]
 ]
 
-get-tile: function [ offs ] [
-    if p: find tiles-coords round/to offs - 20 40 [
-        poke marker 8 p/1
-        poke marker 9 p/1 + 40
-        selected: index? p
-
+move-tile: func [ offs ] [
+    either drag [
+        t-id: to word! rejoin ["tile" selected]
+        start: find/tail get t-id 'polygon
+        repeat row 8 [
+            repeat col 3 [
+                start/1: triangles/:row/:col + offs
+                start: next start
+            ]
+            start: find/tail start 'polygon
+        ]
+    ][
+        coord: round/to offs - 20 40 
+        if p: select tiles-coords coord [
+            poke marker 8 coord
+            poke marker 9 coord + 40
+            dragged: coord
+            selected: p
+        ]    
     ]
+]
+
+start-move: func [ offs ][
+    if all [selected not drag][
+        start-offs: offs
+        drag: on
+    ]
+]
+
+update-tile: func [ offs ][
+    if selected [
+        stop-drag: round/to offs - 20 40
+        if not select tiles-coords stop-drag [
+            remove/key tiles-coords dragged
+            put tiles-coords stop-drag selected
+        ]
+        drag: off
+    ]    
 ]
 
 gen-tiles
 arrange-tiles
 
-append tiles-block [marker: line-width 2 pen orange fill-pen transparent box 0x0 0x0 ]
+append tiles-block [marker: line-width 3 pen orange fill-pen transparent box 0x0 0x0 ]
 
 view compose [
     Title "Izzi puzzle"
     base (sky - 15) 800x400 draw tiles-block
     all-over
-    on-over [ get-tile event/offset]
+    on-over [move-tile event/offset]
+    on-down [start-move event/offset]
+    on-up [update-tile event/offset]
 ]
