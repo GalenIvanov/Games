@@ -91,7 +91,14 @@ arrange-tiles: has [
 ]
 
 move-tile: func [ offs ] [
+    ; restrain the cursor within our window
+    offs/x: max offs/x 0
+    offs/x: min offs/x 760
+    offs/y: max offs/y 0
+    offs/y: min offs/y 360
+    
     either drag [
+        ; to be moved in a function
         t-id: to word! rejoin ["tile" selected]
         start: find/tail get t-id 'polygon
         repeat row 8 [
@@ -128,10 +135,16 @@ update-tile: func [
         tmp-offs: round/to offs - 20 40
         if not select tiles-coords tmp-offs [
             stop-offs: tmp-offs
+            ; restrain the tile within our window
+            stop-offs/x: max stop-offs/x 0
+            stop-offs/x: min stop-offs/x 760
+            stop-offs/y: max stop-offs/y 0
+            stop-offs/y: min stop-offs/y 360
             remove/key tiles-coords dragged
             put tiles-coords stop-offs selected
         ]
         
+        ; to be moved in a function !
         t-id: to word! rejoin ["tile" selected]
         start: find/tail get t-id 'polygon
         repeat row 8 [
@@ -149,8 +162,10 @@ update-tile: func [
 
 gen-tiles
 arrange-tiles
-
-append tiles-block [marker: line-width 3 pen orange fill-pen transparent box 0x0 0x0 ]
+append tiles-block [ marker: line-width 3
+    pen orange fill-pen transparent
+    box 0x0 0x0
+]
 
 view compose [
     Title "Izzi puzzle"
