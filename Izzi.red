@@ -90,6 +90,27 @@ arrange-tiles: has [
     ]
 ]
 
+edges-match?: func [
+    offs
+    /local n U R D L
+][
+    n: selected
+    match: true
+    if all [U: select tiles-coords offs - 0x40
+            (tiles/:n/1 <> tiles/:U/6) or
+            (tiles/:n/2 <> tiles/:U/5)] [match: false]
+    if all [R: select tiles-coords offs + 40x0 
+            (tiles/:n/3 <> tiles/:R/8) or
+            (tiles/:n/4 <> tiles/:R/7)] [match: false]
+    if all [D: select tiles-coords offs + 0x40 
+            (tiles/:n/5 <> tiles/:D/2) or
+            (tiles/:n/6 <> tiles/:D/1)] [match: false]
+    if all [L: select tiles-coords offs - 40x0 
+            (tiles/:n/8 <> tiles/:L/3) or
+            (tiles/:n/7 <> tiles/:L/4)] [match: false]
+    match
+]
+
 move-tile: func [ offs ] [
     ; restrain the cursor within our window
     offs/x: max offs/x 0
@@ -137,7 +158,10 @@ update-tile: func [
     stop-offs: start-offs
     if selected [
         tmp-offs: round/to offs - 20 40
-        if not select tiles-coords tmp-offs [
+        if  all [ 
+            not select tiles-coords tmp-offs
+            edges-match? tmp-offs
+        ][
             stop-offs: tmp-offs
             ; restrain the tile within our window
             stop-offs/x: max stop-offs/x 0
@@ -171,6 +195,7 @@ rotate-tile: func [
     coord: round/to offs - 20 40
     if n: select tiles-coords coord [
         tile: tiles/:n
+        ; I need to add a check for matching here!!!
         either dr = -1 [
             move/part at tile 7 tile 2
         ][
@@ -194,9 +219,9 @@ view compose [
     Title "Izzi puzzle"
     base (sky - 15) 800x400 draw tiles-block
     all-over
-    on-over [move-tile event/offset]
-    on-down [start-move event/offset]
-    on-up [update-tile event/offset]
+    on-over  [move-tile event/offset]
+    on-down  [start-move event/offset]
+    on-up    [update-tile event/offset]
     on-wheel [rotate-tile event/offset event/picked]
     focus
 ]
