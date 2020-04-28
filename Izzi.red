@@ -7,7 +7,7 @@ tiles: make block! 64
 tiles-block: make block! 64
 tiles-coords: make map! 64
 grid-offs: 40x40
-
+delta-offs: 0x0
 start-offs: 0
 drag: off
 
@@ -54,7 +54,7 @@ make-tile: function [
         foreach t triangles [
             clr: pick scheme -47 + tiles/:n/:bit
             keep compose [
-                pen 255.240.120.230 fill-pen (clr)
+                pen 255.240.120.255 fill-pen (clr)
                 polygon (t/1 + offs) (t/2 + offs) (t/3 + offs)
             ]
             bit: bit + 1
@@ -103,7 +103,7 @@ move-tile: func [ offs ] [
         start: find/tail get t-id 'polygon
         repeat row 8 [
             repeat col 3 [
-                start/1: triangles/:row/:col + offs
+                start/1: triangles/:row/:col + offs - delta-offs
                 start: next start
             ]
             start: find/tail start 'polygon
@@ -123,7 +123,10 @@ start-move: func [ offs ][
         dragged: coord
         selected: p
         start-offs: round/to offs - 20 40
+        delta-offs: offs - start-offs
         drag: on
+        poke marker 8 0x0
+        poke marker 9 0x0
     ]
 ]
 
