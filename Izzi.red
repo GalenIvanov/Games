@@ -45,8 +45,7 @@ gen-tiles: has [
 ]
 
 make-tile: function [
-    n
-    offs
+    n offs
 ][
     bit: 1
     collect/into [
@@ -71,8 +70,7 @@ arrange-tiles: has [
             offs: as-pair col - 1 * 40 + grid-offs/x
                           row - 1 * 40 + grid-offs/y
             append tiles-block compose [
-                pen (sky + 10)
-                fill-pen (sky - 10)
+                pen (sky + 10) fill-pen (sky - 10)
                 box (offs + 360x0) (offs + 400x40)
             ]    
         ]    
@@ -98,22 +96,25 @@ edge=: func [
                 t <> selected
                 (tiles/:selected/:s1 <> tiles/:t/:d1) 
                 or (tiles/:selected/:s2 <> tiles/:t/:d2)
-    ][
-        false
-    ][
-        true
-    ]
+    ][false][true]
 ]
 
 edges-match?: func [
     offs
 ][
+    if any [            ; is the tile outside the grid?
+        offs/x < 400
+        offs/x > 720
+        offs/y <  40
+        offs/y > 360 
+    ][ return true ]    ; if yes - don't bother to match the adjacent edges  
+    
     all [
         edge= offs - 0x40 1 6 2 5    ;    1 2
         edge= offs + 40x0 3 8 4 7    ;   8   3
         edge= offs + 0x40 5 2 6 1    ;   7   4
         edge= offs - 40x0 8 3 7 4    ;    6 5
-    ]    
+    ]
 ]
 
 move-tile: func [ offs ] [
@@ -194,27 +195,35 @@ update-tile: func [
 
 rotate-tile: func [
    offs  dr
-   /local n coord tile t-id
+   /local n coord tile t-id orig-tile
 ][
     coord: round/to offs - 20 40
     if n: select tiles-coords coord [
+        selected: n
         tile: tiles/:n
-        ; I need to add a check for matching here!!!
+        orig-tile: copy tile
+        
         either dr = -1 [
             move/part at tile 7 tile 2
         ][
             move/part tile tail tile 2
         ]
         tiles/:n: tile
-        tile: make-tile n round/to offs - 20 40
-        t-id: get take tile
-        change/part t-id tile length? tile
+        
+        either edges-match? coord [
+            tile: make-tile n coord
+            t-id: get take tile
+            change/part t-id tile length? tile
+        ][
+            tiles/:n: orig-tile
+        ]            
     ]
 ]
 
 gen-tiles
 arrange-tiles
-append tiles-block [ marker: line-width 3
+append tiles-block [ 
+    marker: line-width 3
     pen orange fill-pen transparent
     box 0x0 0x0
 ]
