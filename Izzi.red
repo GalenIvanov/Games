@@ -10,10 +10,11 @@ grid-offs: 40x40
 delta-offs: 0x0
 start-offs: 0
 drag: off
-
-scheme: [164.200.250.255 beige]
-
 selected: none
+scheme: [164.200.250.255 beige]
+start-drag: 0   ; 0 if dragging started outside grid; 1 - inside grid
+end-drag: 0     ; 0 if dragging ended outside grid; 1 - inside grid
+prog: 0
 
 triangles: [
     [0x0 20x0 20x20]
@@ -88,6 +89,15 @@ arrange-tiles: has [
     ]
 ]
 
+outside-grid?: func [offs][
+    any [             ; is the tile outside the grid?
+        offs/x < 400
+        offs/x > 720
+        offs/y <  40
+        offs/y > 360 
+    ]
+] 
+
 edge=: func [
     coord s1 d1 s2 d2
     /local t
@@ -102,12 +112,7 @@ edge=: func [
 edges-match?: func [
     offs
 ][
-    if any [            ; is the tile outside the grid?
-        offs/x < 400
-        offs/x > 720
-        offs/y <  40
-        offs/y > 360 
-    ][ return true ]    ; if yes - don't bother to match the adjacent edges  
+    if outside-grid? offs [return true] ; if yes - don't bother to match the adjacent edges
     
     all [
         edge= offs - 0x40 1 6 2 5    ;    1 2
@@ -156,6 +161,7 @@ start-move: func [ offs ][
         dragged: coord
         selected: p
         start-offs: round/to offs - 20 40
+		start-drag: either outside-grid? start-offs [0][1]
         delta-offs: offs - start-offs
         drag: on
         poke marker 8 0x0
@@ -186,6 +192,10 @@ update-tile: func [
         update-coords stop-offs
         drag: off
         selected: none
+		
+		end-drag: either outside-grid? stop-offs [0][1]
+		prog: prog + end-drag - start-drag
+		print prog  
     ]    
 ]
 
