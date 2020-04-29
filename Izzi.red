@@ -90,25 +90,30 @@ arrange-tiles: has [
     ]
 ]
 
+edge=: func [
+    coord s1 d1 s2 d2
+    /local t
+][
+    either all [t: select tiles-coords coord
+                t <> selected
+                (tiles/:selected/:s1 <> tiles/:t/:d1) 
+                or (tiles/:selected/:s2 <> tiles/:t/:d2)
+    ][
+        false
+    ][
+        true
+    ]
+]
+
 edges-match?: func [
     offs
-    /local n U R D L
 ][
-    n: selected
-    match: true
-    if all [U: select tiles-coords offs - 0x40
-            (tiles/:n/1 <> tiles/:U/6) or
-            (tiles/:n/2 <> tiles/:U/5)] [match: false]
-    if all [R: select tiles-coords offs + 40x0 
-            (tiles/:n/3 <> tiles/:R/8) or
-            (tiles/:n/4 <> tiles/:R/7)] [match: false]
-    if all [D: select tiles-coords offs + 0x40 
-            (tiles/:n/5 <> tiles/:D/2) or
-            (tiles/:n/6 <> tiles/:D/1)] [match: false]
-    if all [L: select tiles-coords offs - 40x0 
-            (tiles/:n/8 <> tiles/:L/3) or
-            (tiles/:n/7 <> tiles/:L/4)] [match: false]
-    match
+    all [
+        edge= offs - 0x40 1 6 2 5    ;    1 2
+        edge= offs + 40x0 3 8 4 7    ;   8   3
+        edge= offs + 0x40 5 2 6 1    ;   7   4
+        edge= offs - 40x0 8 3 7 4    ;    6 5
+    ]    
 ]
 
 move-tile: func [ offs ] [
@@ -171,7 +176,6 @@ update-tile: func [
             remove/key tiles-coords dragged
             put tiles-coords stop-offs selected
         ]
-        
         ; to be moved in a function !
         t-id: to word! rejoin ["tile" selected]
         start: find/tail get t-id 'polygon
