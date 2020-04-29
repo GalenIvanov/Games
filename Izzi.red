@@ -171,7 +171,7 @@ start-move: func [ offs ][
 
 update-tile: func [ 
     offs
-    /local stop-offs tmp-offs t-id start row col
+    /local stop-offs tmp-offs
 ][
     stop-offs: start-offs
     if selected [
@@ -195,13 +195,16 @@ update-tile: func [
         
         end-drag: either outside-grid? stop-offs [0][1]
         prog: prog + end-drag - start-drag
-        print prog  
+		if prog = 64 [
+		    poke solved-frame 6 400x40
+            poke solved-frame 7 720x360  
+		]
     ]    
 ]
 
 rotate-tile: func [
    offs  dr
-   /local n coord tile t-id orig-tile
+   /local n coord tile orig-tile
 ][
     coord: round/to offs - 20 40
     if n: select tiles-coords coord [
@@ -233,6 +236,9 @@ append tiles-block [
     marker: line-width 3
     pen orange fill-pen transparent
     box 0x0 0x0
+	solved-frame: pen green
+	fill-pen transparent
+    box 0x0 0x0	
 ]
 
 view compose [
