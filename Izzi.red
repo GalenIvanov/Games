@@ -117,6 +117,21 @@ edges-match?: func [
     ]
 ]
 
+update-coords: func [
+    offs
+    /local t-id start row col
+][
+    t-id: to word! rejoin ["tile" selected]
+    start: find/tail get t-id 'polygon
+    repeat row 8 [
+        repeat col 3 [
+            start/1: triangles/:row/:col + offs
+            start: next start
+        ]
+        start: find/tail start 'polygon
+    ]
+]
+
 move-tile: func [ offs ] [
     ; restrain the cursor within our window
     offs/x: max offs/x 0
@@ -125,23 +140,14 @@ move-tile: func [ offs ] [
     offs/y: min offs/y 360
     
     either drag [
-        ; to be moved in a function
-        t-id: to word! rejoin ["tile" selected]
-        start: find/tail get t-id 'polygon
-        repeat row 8 [
-            repeat col 3 [
-                start/1: triangles/:row/:col + offs - delta-offs
-                start: next start
-            ]
-            start: find/tail start 'polygon
-        ]
+        update-coords offs - delta-offs
     ][
         coord: round/to offs - 20 40 
         unless p: select tiles-coords coord [
             coord: -40x-40
         ]    
-         poke marker 8 coord
-         poke marker 9 coord + 40
+        poke marker 8 coord
+        poke marker 9 coord + 40
     ]
 ]
 
@@ -177,17 +183,7 @@ update-tile: func [
             remove/key tiles-coords dragged
             put tiles-coords stop-offs selected
         ]
-        ; to be moved in a function !
-        t-id: to word! rejoin ["tile" selected]
-        start: find/tail get t-id 'polygon
-        repeat row 8 [
-            repeat col 3 [
-                start/1: triangles/:row/:col + stop-offs
-                start: next start
-            ]
-            start: find/tail start 'polygon
-        ]
-        
+        update-coords stop-offs
         drag: off
         selected: none
     ]    
@@ -221,6 +217,7 @@ rotate-tile: func [
 ]
 
 gen-tiles
+;random tiles
 arrange-tiles
 append tiles-block [ 
     marker: line-width 3
