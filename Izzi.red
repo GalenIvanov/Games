@@ -161,7 +161,7 @@ start-move: func [ offs ][
         dragged: coord
         selected: p
         start-offs: round/to offs - 20 40
-		start-drag: either outside-grid? start-offs [0][1]
+        start-drag: either outside-grid? start-offs [0][1]
         delta-offs: offs - start-offs
         drag: on
         poke marker 8 0x0
@@ -192,10 +192,10 @@ update-tile: func [
         update-coords stop-offs
         drag: off
         selected: none
-		
-		end-drag: either outside-grid? stop-offs [0][1]
-		prog: prog + end-drag - start-drag
-		print prog  
+        
+        end-drag: either outside-grid? stop-offs [0][1]
+        prog: prog + end-drag - start-drag
+        print prog  
     ]    
 ]
 
