@@ -8,6 +8,7 @@ random/seed now
 tiles: make block! 64
 tiles-block: make block! 64
 tiles-coords: make map! 64
+conditions: make map! 64
 grid-offs: 40x40
 delta-offs: 0x0
 start-offs: 0
@@ -27,6 +28,33 @@ triangles: [
     [20x40 0x40 20x20]
     [0x40 0x20 20x20]
     [0x20 0x0 20x20]
+]
+
+; conditions
+RD: [2 3 6 7] ; right diagonal
+LD: [1 8 4 5] ; left diagonal
+H:  [3 4 7 8] ; horizontal
+V:  [1 2 5 6] ; vertical
+BR: [3 4 5 6] ; bottom-right corner
+BL: [5 6 7 8] ; bottom-left corner
+TL: [1 2 7 8] ; top-left corner
+TR: [1 2 3 4] ; top-right corner
+
+set-conditions: func [
+    mode
+    /local n
+][
+    clear conditions
+    switch mode [
+        "Diagonal" [
+            repeat n 8 [
+                put conditions as-pair n * 40 + 360 8 - n * 40 + 40 RD 
+            ]
+            append tiles-block compose [pen (sky + 10) line 400x360 720x40]]
+        "Diamond"  []
+        "X"        []
+        "Border"   []        
+    ]
 ]
 
 gen-tiles: has [
@@ -175,6 +203,19 @@ start-move: func [ offs ][
     ]
 ]
 
+check-cond: func [
+    offs
+    /local n conds a b c d 
+][
+    either conds: select conditions offs [
+        set [a b c d] conds
+        n: selected
+        (tiles/:n/:a <> tiles/:n/:b) and (tiles/:n/:c <> tiles/:n/:d)
+    ][
+        true
+    ]
+]
+
 update-tile: func [ 
     offs
     /local stop-offs tmp-offs
@@ -185,6 +226,7 @@ update-tile: func [
         if  all [ 
             not select tiles-coords tmp-offs
             edges-match? tmp-offs
+            check-cond tmp-offs
         ][
             stop-offs: tmp-offs
             ; restrain the tile within our window
@@ -225,7 +267,7 @@ rotate-tile: func [
         ]
         tiles/:n: tile
         
-        either edges-match? coord [
+        either (edges-match? coord) and (check-cond coord) [
             tile: make-tile n coord
             t-id: get take tile
             change/part t-id tile length? tile
@@ -238,6 +280,8 @@ rotate-tile: func [
 gen-tiles
 random tiles
 arrange-tiles
+set-conditions "Diagonal"
+
 
 append tiles-block [ 
     marker: line-width 3
@@ -250,7 +294,7 @@ append tiles-block [
 
 view compose [
     Title "Izzi puzzle"
-    base (sky - 15) 800x400 draw tiles-block
+    base (sky - 15) 820x400 draw tiles-block
     all-over
     on-over  [move-tile event/offset]
     on-down  [start-move event/offset]
