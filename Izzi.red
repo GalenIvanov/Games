@@ -3,6 +3,8 @@ Red [
     Author: "Galen Ivanov"
 ]
 
+random/seed now
+
 tiles: make block! 64
 tiles-block: make block! 64
 tiles-coords: make map! 64
@@ -66,14 +68,16 @@ arrange-tiles: has [
     n row col offs   
 ][
     ; grid
-    repeat row 8 [
-        repeat col 8 [
-            offs: as-pair col - 1 * 40 + grid-offs/x
-                          row - 1 * 40 + grid-offs/y
-            append tiles-block compose [
-                pen (sky + 10) fill-pen (sky - 10)
-                box (offs + 360x0) (offs + 400x40)
-            ]    
+    append tiles-block compose [ 
+        pen (sky + 10) fill-pen (sky - 10)
+        box 400x40 720x360 
+    ]
+    repeat n 9 [
+        row: as-pair 400 40 * n
+        col: as-pair 40 * n + 360 40
+        append tiles-block compose [
+            line (row) (row + 320x0)
+            line (col) (col + 0x320)
         ]    
     ]
     ; tiles
@@ -92,9 +96,9 @@ arrange-tiles: has [
 outside-grid?: func [offs][
     any [             ; is the tile outside the grid?
         offs/x < 400
-        offs/x > 720
+        offs/x >= 720
         offs/y <  40
-        offs/y > 360 
+        offs/y >= 360 
     ]
 ] 
 
@@ -102,10 +106,12 @@ edge=: func [
     coord s1 d1 s2 d2
     /local t
 ][
-    either all [t: select tiles-coords coord
-                t <> selected
-                (tiles/:selected/:s1 <> tiles/:t/:d1) 
-                or (tiles/:selected/:s2 <> tiles/:t/:d2)
+    either all [
+        not outside-grid? coord
+        t: select tiles-coords coord
+        t <> selected
+        (tiles/:selected/:s1 <> tiles/:t/:d1) 
+        or (tiles/:selected/:s2 <> tiles/:t/:d2)
     ][false][true]
 ]
 
@@ -115,10 +121,10 @@ edges-match?: func [
     if outside-grid? offs [return true] ; if yes - don't bother to match the adjacent edges
     
     all [
-        edge= offs - 0x40 1 6 2 5    ;    1 2
-        edge= offs + 40x0 3 8 4 7    ;   8   3
-        edge= offs + 0x40 5 2 6 1    ;   7   4
-        edge= offs - 40x0 8 3 7 4    ;    6 5
+        edge= offs - 0x40 1 6 2 5    ;   1 2
+        edge= offs + 40x0 3 8 4 7    ;  8   3
+        edge= offs + 0x40 5 2 6 1    ;  7   4
+        edge= offs - 40x0 8 3 7 4    ;   6 5
     ]
 ]
 
@@ -195,10 +201,10 @@ update-tile: func [
         
         end-drag: either outside-grid? stop-offs [0][1]
         prog: prog + end-drag - start-drag
-		if prog = 64 [
-		    poke solved-frame 6 400x40
+        if prog = 64 [
+            poke solved-frame 6 400x40
             poke solved-frame 7 720x360  
-		]
+        ]
     ]    
 ]
 
@@ -230,15 +236,16 @@ rotate-tile: func [
 ]
 
 gen-tiles
-;random tiles
+random tiles
 arrange-tiles
+
 append tiles-block [ 
     marker: line-width 3
     pen orange fill-pen transparent
     box 0x0 0x0
-	solved-frame: pen green
-	fill-pen transparent
-    box 0x0 0x0	
+    solved-frame: pen green
+    fill-pen transparent
+    box 0x0 0x0    
 ]
 
 view compose [
