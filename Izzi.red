@@ -282,7 +282,6 @@ random tiles
 arrange-tiles
 set-conditions "Diagonal"
 
-
 append tiles-block [ 
     marker: line-width 3
     pen orange fill-pen transparent
