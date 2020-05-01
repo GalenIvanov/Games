@@ -146,13 +146,15 @@ edge=: func [
 edges-match?: func [
     offs
 ][
-    if outside-grid? offs [return true] ; if yes - don't bother to match the adjacent edges
-    
-    all [
-        edge= offs - 0x40 1 6 2 5    ;   1 2
-        edge= offs + 40x0 3 8 4 7    ;  8   3
-        edge= offs + 0x40 5 2 6 1    ;  7   4
-        edge= offs - 40x0 8 3 7 4    ;   6 5
+    either outside-grid? offs [
+        true  ; ; if yes - don't bother to match the adjacent edges
+    ][
+        none <> all [
+            edge= offs - 0x40 1 6 2 5    ;   1 2
+            edge= offs + 40x0 3 8 4 7    ;  8   3
+            edge= offs + 0x40 5 2 6 1    ;  7   4
+            edge= offs - 40x0 8 3 7 4    ;   6 5
+        ]    
     ]
 ]
 
