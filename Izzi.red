@@ -17,6 +17,8 @@ scheme: [164.200.250.255 ivory]
 start-drag: 0 ; 0 if dragging started outside grid; 1 - inside grid
 end-drag: 0   ; 0 if dragging ended outside grid; 1 - inside grid
 prog: 0
+dlg: false
+ans: false
 
 triangles: [
     [0x0 20x0 20x20]
@@ -56,6 +58,7 @@ set-conditions: func [
 ][
     clear conditions
     switch mode [
+	    "Basic" []
         "Diagonal" [
             repeat n 8 [
                 put conditions as-pair n * 40 + 360 8 - n * 40 + 40 RD
@@ -166,6 +169,14 @@ arrange-tiles: has [
             put tiles-coords offs n
             n: n + 1
         ]
+    ]
+	append tiles-block [
+        marker: line-width 3
+        pen orange fill-pen transparent
+        box 0x0 0x0
+        solved-frame: pen green
+        fill-pen transparent
+        box 0x0 0x0
     ]
 ]
 
@@ -327,24 +338,33 @@ rotate-tile: func [
     ]
 ]
 
-gen-tiles
-random tiles
-arrange-tiles
-;set-conditions "Diagonal"
-;set-conditions "X"
-;set-conditions "Diamond"
-set-conditions "Border"
-
-append tiles-block [
-    marker: line-width 3
-    pen orange fill-pen transparent
-    box 0x0 0x0
-    solved-frame: pen green
-    fill-pen transparent
-    box 0x0 0x0
-]
-
+init: func [mode][
+   clear tiles-block
+   clear tiles-coords
+   clear conditions
+   gen-tiles
+   random tiles
+   arrange-tiles
+   set-conditions mode
+ ]
+ 
 over-menu: func [face][face/color: face/color xor 127.0.127]
+
+msg: has [ ans ][
+    dlg: true
+    ans: false
+    view/flags [
+	   below
+	   text "The current progress wiil be lost!^/Do you want ot start a new game?"
+	   across
+	   button "OK" [ans: true unview]
+	   button "Cancel" [ans: false unview]
+	] [popup]
+	dlg: false 
+	ans
+] 
+ 
+init "Basic"
 
 view compose [
     Title "Izzi puzzle"
@@ -356,22 +376,33 @@ view compose [
     on-up    [update-tile event/offset]
     on-wheel [rotate-tile event/offset event/picked]
     focus
-    below
-    basic: base sky 58x58
+    
+	below
+	basic: base sky 58x58
     on-over[over-menu basic]
-    diag: base sky 58x58 
+	on-up [if not dlg [if msg [init "Basic"]]]
+    
+	diag: base sky 58x58 
     draw [line-width 2 pen snow line 0x57 57x0]
     on-over[over-menu diag]
-    diam: base sky 58x58
+	on-up [if not dlg [if msg [init "Diagonal"]]]
+    
+	diam: base sky 58x58
     draw [line-width 2 pen snow fill-pen transparent polygon 0x29 29x0 58x29 29x58]
     on-over[over-menu diam]
-    x: base sky 58x58
+	on-up [if not dlg [if msg [init "Diamond"]]]
+    
+	x: base sky 58x58
     draw [line-width 2 pen snow line 0x0 57x57 0x57 57x0]
     on-over[over-menu x]
-    frame: base sky 58x58
+	on-up [if not dlg [if msg [init "X"]]]
+    
+	frame: base sky 58x58
     draw [line-width 2 pen snow fill-pen transparent polygon 5x5 52x5 52x52 5x52]
     on-over[over-menu frame]
-    about: base sky 58x58
+    on-up [if not dlg [if msg [init "Border"]]]
+	
+	about: base 219.200.128 58x58
     draw [font my-font text 18x5 "?"]
     on-over[over-menu about]
 ]
