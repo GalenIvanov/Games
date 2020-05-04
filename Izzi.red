@@ -38,6 +38,18 @@ BL: [5 6 7 8] ; bottom-left corner
 TL: [1 2 7 8] ; top-left corner
 TR: [1 2 3 4] ; top-right corner
 
+my-font: make object! [
+        name: "Verdana"
+        size: 30
+        style: "bold"
+        angle: 0
+        color: snow
+        anti-alias?: true
+        shadow: none
+        state: none
+        parent: none
+    ]
+
 set-conditions: func [
     mode
     /local n
@@ -210,6 +222,10 @@ update-coords: func [
 ]
 
 move-tile: func [offs][
+
+    if all [offs/x > 760 offs/x < 810 none? selected][
+        
+    ]
     ; restrain the cursor within our window
     offs/x: max offs/x 0
     offs/x: min offs/x 720
@@ -320,22 +336,6 @@ arrange-tiles
 set-conditions "Border"
 
 append tiles-block [
-    modes:
-    line-width 1
-    pen snow fill-pen sky
-    box 760x40 810x90
-    box 760x108 810x158
-    line 760x158 810x108
-    box 760x176 810x226
-    box 760x244 810x294
-    line 760x294 810x244
-    line 760x244 810x294
-    box 760x312 810x362
-    
-    fill-pen transparent
-    polygon 760x201 785x226 810x201 785x176
-    polygon 765x317 805x317 805x357 765x357
-
     marker: line-width 3
     pen orange fill-pen transparent
     box 0x0 0x0
@@ -344,13 +344,34 @@ append tiles-block [
     box 0x0 0x0
 ]
 
+over-menu: func [face][face/color: face/color xor 127.0.127]
+
 view compose [
     Title "Izzi puzzle"
-    base (sky - 15) 850x400 draw tiles-block
+    across
+    base (sky - 15) 760x400 draw tiles-block
     all-over
     on-over  [move-tile event/offset]
     on-down  [start-move event/offset]
     on-up    [update-tile event/offset]
     on-wheel [rotate-tile event/offset event/picked]
     focus
+    below
+    basic: base sky 58x58
+    on-over[over-menu basic]
+    diag: base sky 58x58 
+    draw [line-width 2 pen snow line 0x57 57x0]
+    on-over[over-menu diag]
+    diam: base sky 58x58
+    draw [line-width 2 pen snow fill-pen transparent polygon 0x29 29x0 58x29 29x58]
+    on-over[over-menu diam]
+    x: base sky 58x58
+    draw [line-width 2 pen snow line 0x0 57x57 0x57 57x0]
+    on-over[over-menu x]
+    frame: base sky 58x58
+    draw [line-width 2 pen snow fill-pen transparent polygon 5x5 52x5 52x52 5x52]
+    on-over[over-menu frame]
+    about: base sky 58x58
+    draw [font my-font text 18x5 "?"]
+    on-over[over-menu about]
 ]
