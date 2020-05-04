@@ -13,9 +13,9 @@ delta-offs: 0x0
 start-offs: 0
 drag: off
 selected: none
-scheme: [164.200.250.255 beige]
-start-drag: 0   ; 0 if dragging started outside grid; 1 - inside grid
-end-drag: 0     ; 0 if dragging ended outside grid; 1 - inside grid
+scheme: [164.200.250.255 ivory]
+start-drag: 0 ; 0 if dragging started outside grid; 1 - inside grid
+end-drag: 0   ; 0 if dragging ended outside grid; 1 - inside grid
 prog: 0
 
 triangles: [
@@ -134,7 +134,7 @@ arrange-tiles: has [
     n row col offs
 ][
     append tiles-block compose [
-        pen (sky + 10) fill-pen (sky - 10)
+        pen sky fill-pen (sky - 10)
         box 400x40 720x360
     ]
     repeat n 9 [
@@ -212,7 +212,7 @@ update-coords: func [
 move-tile: func [offs][
     ; restrain the cursor within our window
     offs/x: max offs/x 0
-    offs/x: min offs/x 760
+    offs/x: min offs/x 720
     offs/y: max offs/y 0
     offs/y: min offs/y 360
     either drag [
@@ -268,7 +268,7 @@ update-tile: func [
             stop-offs: tmp-offs
             ; restrain the tile within our window
             stop-offs/x: max stop-offs/x 0
-            stop-offs/x: min stop-offs/x 760
+            stop-offs/x: min stop-offs/x 720
             stop-offs/y: max stop-offs/y 0
             stop-offs/y: min stop-offs/y 360
             remove/key tiles-coords dragged
@@ -320,6 +320,22 @@ arrange-tiles
 set-conditions "Border"
 
 append tiles-block [
+    modes:
+    line-width 1
+    pen snow fill-pen sky
+    box 760x40 810x90
+    box 760x108 810x158
+    line 760x158 810x108
+    box 760x176 810x226
+    box 760x244 810x294
+    line 760x294 810x244
+    line 760x244 810x294
+    box 760x312 810x362
+    
+    fill-pen transparent
+    polygon 760x201 785x226 810x201 785x176
+    polygon 765x317 805x317 805x357 765x357
+
     marker: line-width 3
     pen orange fill-pen transparent
     box 0x0 0x0
@@ -330,7 +346,7 @@ append tiles-block [
 
 view compose [
     Title "Izzi puzzle"
-    base (sky - 15) 820x400 draw tiles-block
+    base (sky - 15) 850x400 draw tiles-block
     all-over
     on-over  [move-tile event/offset]
     on-down  [start-move event/offset]
