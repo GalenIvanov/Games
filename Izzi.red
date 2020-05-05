@@ -22,14 +22,14 @@ prog: 0
 scheme: [aqua ivory]
 
 triangles: [
-    [1x1 20x1 20x20]
-    [20x1 39x1 20x20]
-    [39x0 39x20 20x20]
-    [39x20 39x40 20x20]
-    [39x39 20x39 20x20]
-    [20x39 1x39 20x20]
-    [1x39 1x20 20x20]
-    [1x20 1x1 20x20]
+    [0x0 20x0 20x20]
+    [20x0 40x0 20x20]
+    [40x0 40x20 20x20]
+    [40x20 40x40 20x20]
+    [40x40 20x40 20x20]
+    [20x40 0x40 20x20]
+    [0x40 0x20 20x20]
+    [0x20 0x0 20x20]
 ]
 ; conditions
 RD: [2 3 6 7] ; right diagonal
@@ -154,16 +154,7 @@ arrange-tiles: has [
             line (col) (col + 0x320)
         ]
     ]
-    
-    append tiles-block [
-        solved-frame: pen green
-        fill-pen transparent
-        box 0x0 0x0
-        marker: line-width 4
-        pen orange fill-pen transparent
-        box 0x0 0x0
-
-    ]
+   
     n: 1
     repeat row 8 [
         repeat col 8 [
@@ -172,6 +163,15 @@ arrange-tiles: has [
             put tiles-coords offs n
             n: n + 1
         ]
+    ]
+    
+    append tiles-block [
+        solved-frame: pen green
+        fill-pen transparent
+        box 0x0 0x0
+        marker: line-width 4
+        pen orange fill-pen transparent
+        box 0x0 0x0
     ]
 ]
 
@@ -229,7 +229,7 @@ update-coords: func [
 
 move-tile: func [offs][
     ; restrain the cursor within our window
-	offs: max 0x0 min 720x360 offs
+    offs: max 0x0 min 720x360 offs
     either drag [
         update-coords offs - delta-offs
     ][
@@ -250,8 +250,7 @@ start-move: func [
         selected: p
         
         t-id: to word! rejoin ["tile" selected]
-        move/part back get t-id tail tiles-block 65
-        ;move/part find tiles-block t-id tail tiles-block 65
+        move/part back get t-id find tiles-block solved-frame 65
         
         dragged: coord
         start-offs: round/to offs - 20 40
@@ -290,11 +289,7 @@ update-tile: func [
         ][
             stop-offs: tmp-offs
             ; restrain the tile within our window
-            {stop-offs/x: max stop-offs/x 0
-            stop-offs/x: min stop-offs/x 720
-            stop-offs/y: max stop-offs/y 0
-            stop-offs/y: min stop-offs/y 360}
-			stop-offs: max 0x0 min 720x360 stop-offs
+            stop-offs: max 0x0 min 720x360 stop-offs
             remove/key tiles-coords dragged
             put tiles-coords stop-offs selected
         ]
@@ -381,7 +376,7 @@ confirm: func [
 info-dlg: does [
     info/enabled?: false
     view/flags [
-	    Title "About Izzi"
+        Title "About Izzi"
         below
         text font about-font {Izzi puzzle is designed by Frank Nichols and made in 1992
 by Binary Arts (now called ThinkFun).
