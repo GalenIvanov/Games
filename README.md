@@ -32,7 +32,8 @@ An interactive tangram puzzle.
 
 Izzi
 -
-
+<img src="Izzi puzzle.png">
+<img src="Izzi solving.png">
 
 [Izzi](https://www.thinkfun.com/products/izzi/) is a matching puzzle designed by Frank Nichols and made in 1992 by Binary Arts (now called ThinkFun): 
 "This pattern matching puzzle consists of 64 square tiles, each printed with a black and white geometric pattern. Your goal is to assemble the tiles into an 8x8 square following the IZZI rule: In order to place two tiles adjacent to one another, their colored edges must match up precisely."
