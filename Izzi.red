@@ -52,7 +52,7 @@ my-font: make object! [
     state: none
     parent: none
 ]
-	
+    
 about-font: make object! [
     name: "Verdana"
     size: 10
@@ -63,7 +63,7 @@ about-font: make object! [
     shadow: none
     state: none
     parent: none
-]	
+]    
 
 set-conditions: func [
     mode
@@ -162,10 +162,10 @@ arrange-tiles: has [
     n row col offs
 ][
     append tiles-block compose [
-	    line-width 3
+        line-width 3
         pen (khaki + 20) fill-pen (khaki - 10)
         box 400x40 720x360
-		line-width 1
+        line-width 1
     ]
     repeat n 9 [
         row: as-pair 400 40 * n
@@ -175,8 +175,8 @@ arrange-tiles: has [
             line (col) (col + 0x320)
         ]
     ]
-	
-	append tiles-block [
+    
+    append tiles-block [
         solved-frame: pen green
         fill-pen transparent
         box 0x0 0x0
@@ -274,12 +274,12 @@ start-move: func [
     /local p t-id
 ][
     if p: select tiles-coords coord [
-	    selected: p
-	    
-		t-id: to word! rejoin ["tile" selected]
-		move/part back get t-id tail tiles-block 65
-		;move/part find tiles-block t-id tail tiles-block 65
-		
+        selected: p
+        
+        t-id: to word! rejoin ["tile" selected]
+        move/part back get t-id tail tiles-block 65
+        ;move/part find tiles-block t-id tail tiles-block 65
+        
         dragged: coord
         start-offs: round/to offs - 20 40
         start-drag: either outside-grid? start-offs [0][1]
