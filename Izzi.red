@@ -17,7 +17,6 @@ scheme: [164.200.250.255 ivory]
 start-drag: 0 ; 0 if dragging started outside grid; 1 - inside grid
 end-drag: 0   ; 0 if dragging ended outside grid; 1 - inside grid
 prog: 0
-dlg: false
 ans: false
 
 triangles: [
@@ -350,17 +349,22 @@ init: func [mode][
  
 over-menu: func [face][face/color: face/color xor 127.0.127]
 
-msg: has [ ans ][
-    dlg: true
+msg: func [
+    caller
+    /local ans
+][
+	caller/enabled?: false
     ans: false
     view/flags [
+	   Title "Attention!"
 	   below
 	   text "The current progress wiil be lost!^/Do you want ot start a new game?"
 	   across
 	   button "OK" [ans: true unview]
 	   button "Cancel" [ans: false unview]
-	] [popup]
-	dlg: false 
+	] [modal no-min no-max]
+	;dlg: false
+	caller/enabled?: true
 	ans
 ] 
  
@@ -380,27 +384,27 @@ view compose [
 	below
 	basic: base sky 58x58
     on-over[over-menu basic]
-	on-up [if not dlg [if msg [init "Basic"]]]
+	on-up [if msg basic [init "Basic"]]
     
-	diag: base sky 58x58 
+	diag: base sky 58x58
     draw [line-width 2 pen snow line 0x57 57x0]
     on-over[over-menu diag]
-	on-up [if not dlg [if msg [init "Diagonal"]]]
-    
+	on-up [if msg diag [init "Diagonal"]]
+	
 	diam: base sky 58x58
     draw [line-width 2 pen snow fill-pen transparent polygon 0x29 29x0 58x29 29x58]
     on-over[over-menu diam]
-	on-up [if not dlg [if msg [init "Diamond"]]]
+	on-up [if msg diam [init "Diamond"]]
     
 	x: base sky 58x58
     draw [line-width 2 pen snow line 0x0 57x57 0x57 57x0]
     on-over[over-menu x]
-	on-up [if not dlg [if msg [init "X"]]]
+	on-up [if msg x [init "x"]]
     
 	frame: base sky 58x58
     draw [line-width 2 pen snow fill-pen transparent polygon 5x5 52x5 52x52 5x52]
     on-over[over-menu frame]
-    on-up [if not dlg [if msg [init "Border"]]]
+    on-up [if msg frame [init "Frame"]]
 	
 	about: base 219.200.128 58x58
     draw [font my-font text 18x5 "?"]
