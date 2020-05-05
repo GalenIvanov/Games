@@ -22,14 +22,14 @@ prog: 0
 scheme: [aqua ivory]
 
 triangles: [
-    [0x0 20x0 20x20]
-    [20x0 40x0 20x20]
-    [40x0 40x20 20x20]
-    [40x20 40x40 20x20]
-    [40x40 20x40 20x20]
-    [20x40 0x40 20x20]
-    [0x40 0x20 20x20]
-    [0x20 0x0 20x20]
+    [1x1 20x1 20x20]
+    [20x1 39x1 20x20]
+    [39x0 39x20 20x20]
+    [39x20 39x40 20x20]
+    [39x39 20x39 20x20]
+    [20x39 1x39 20x20]
+    [1x39 1x20 20x20]
+    [1x20 1x1 20x20]
 ]
 ; conditions
 RD: [2 3 6 7] ; right diagonal
@@ -41,30 +41,9 @@ BL: [5 6 7 8] ; bottom-left corner
 TL: [1 2 7 8] ; top-left corner
 TR: [1 2 3 4] ; top-right corner
 
-my-font: make object! [
-    name: "Verdana"
-    size: 30
-    style: none
-    angle: 0
-    color: snow
-    anti-alias?: true
-    shadow: none
-    state: none
-    parent: none
-]
+my-font: make font! [name: "Verdana" size: 30 color: snow]
+about-font: make font! [name: "Verdana"  size: 10 style: 'bold]
     
-about-font: make object! [
-    name: "Verdana"
-    size: 10
-    style: 'bold
-    angle: 0
-    color: black
-    anti-alias?: true
-    shadow: none
-    state: none
-    parent: none
-]    
-
 set-conditions: func [
     mode
     /local n
@@ -407,6 +386,7 @@ confirm: func [
 info-dlg: does [
     info/enabled?: false
     view/flags [
+	    Title "About Izzi"
         below
         text font about-font {Izzi puzzle is designed by Frank Nichols and made in 1992
 by Binary Arts (now called ThinkFun).
