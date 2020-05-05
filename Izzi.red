@@ -228,14 +228,8 @@ update-coords: func [
 ]
 
 move-tile: func [offs][
-    if all [offs/x > 760 offs/x < 810 none? selected][
-        
-    ]
     ; restrain the cursor within our window
-    offs/x: max offs/x 0
-    offs/x: min offs/x 720
-    offs/y: max offs/y 0
-    offs/y: min offs/y 360
+	offs: max 0x0 min 720x360 offs
     either drag [
         update-coords offs - delta-offs
     ][
@@ -296,10 +290,11 @@ update-tile: func [
         ][
             stop-offs: tmp-offs
             ; restrain the tile within our window
-            stop-offs/x: max stop-offs/x 0
+            {stop-offs/x: max stop-offs/x 0
             stop-offs/x: min stop-offs/x 720
             stop-offs/y: max stop-offs/y 0
-            stop-offs/y: min stop-offs/y 360
+            stop-offs/y: min stop-offs/y 360}
+			stop-offs: max 0x0 min 720x360 stop-offs
             remove/key tiles-coords dragged
             put tiles-coords stop-offs selected
         ]
