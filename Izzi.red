@@ -1,6 +1,8 @@
 Red [
     Title: "Izzi puzzle in Red"
     Author: "Galen Ivanov"
+    More-info: https://www.thinkfun.com/products/izzi/
+    Jaaps-puzzle-page: https://www.jaapsch.net/puzzles/izzi.htm
 ]
 
 random/seed now
@@ -8,7 +10,6 @@ tiles: make block! 64
 tiles-block: make block! 64
 tiles-coords: make map! 64
 conditions: make map! 64
-grid-offs: 40x40
 delta-offs: 0x0
 start-offs: 0
 drag: off
@@ -17,7 +18,6 @@ scheme: [164.200.250.255 ivory]
 start-drag: 0 ; 0 if dragging started outside grid; 1 - inside grid
 end-drag: 0   ; 0 if dragging ended outside grid; 1 - inside grid
 prog: 0
-ans: false
 
 triangles: [
     [0x0 20x0 20x20]
@@ -57,7 +57,7 @@ set-conditions: func [
 ][
     clear conditions
     switch mode [
-	    "Basic" []
+        "Basic" []
         "Diagonal" [
             repeat n 8 [
                 put conditions as-pair n * 40 + 360 8 - n * 40 + 40 RD
@@ -162,14 +162,13 @@ arrange-tiles: has [
     n: 1
     repeat row 8 [
         repeat col 8 [
-            offs: as-pair col - 1 * 40 + grid-offs/x
-                          row - 1 * 40 + grid-offs/y
+            offs: as-pair col * 40 row * 40
             append tiles-block make-tile n offs
             put tiles-coords offs n
             n: n + 1
         ]
     ]
-	append tiles-block [
+    append tiles-block [
         marker: line-width 3
         pen orange fill-pen transparent
         box 0x0 0x0
@@ -345,28 +344,54 @@ init: func [mode][
    random tiles
    arrange-tiles
    set-conditions mode
- ]
+]
  
 over-menu: func [face][face/color: face/color xor 127.0.127]
 
-msg: func [
+confirm: func [
     caller
     /local ans
 ][
-	caller/enabled?: false
+    caller/enabled?: false
     ans: false
     view/flags [
-	   Title "Attention!"
-	   below
-	   text "The current progress wiil be lost!^/Do you want ot start a new game?"
-	   across
-	   button "OK" [ans: true unview]
-	   button "Cancel" [ans: false unview]
-	] [modal no-min no-max]
-	;dlg: false
-	caller/enabled?: true
-	ans
+        Title "Attention!"
+        below
+        text "The current progress wiil be lost!^/Do you want to start a new game?"
+        across
+        button "OK" [ans: true unview]
+        button "Cancel" [ans: false unview]
+    ][modal no-min no-max]
+    
+    caller/enabled?: true
+    ans
 ] 
+
+info-dlg: does [
+    info/enabled?: false
+    view/flags [
+        below
+        text {Izzi puzzle is designed by Frank Nichols and made in 1992
+by Binary Arts (now called ThinkFun).
+
+Put the tiles in the 8x8 grid so that the edges of each touching
+tile match: white touches white and blue touches blue. Drag the tiles
+with the left mouse button, rotate them using the mouse wheel. Please
+note that each move whitin the grid is checked for correctness.
+
+In addition to the basic version of the puzzle, you can try to
+solve it using the extra conditions - there must be a "terminator"
+(an edge between a white and a blue triangle) at all places where
+there is a white line.
+
+Galen Ivanov, 2020
+}
+        button "Close" [unview]
+    ][modal no-max no-min]
+    
+    info/enabled?: true
+]
+
  
 init "Basic"
 
@@ -381,32 +406,33 @@ view compose [
     on-wheel [rotate-tile event/offset event/picked]
     focus
     
-	below
-	basic: base sky 58x58
+    below
+    basic: base sky 58x58
     on-over[over-menu basic]
-	on-up [if msg basic [init "Basic"]]
+    on-up [if confirm basic [init "Basic"]]
     
-	diag: base sky 58x58
+    diag: base sky 58x58
     draw [line-width 2 pen snow line 0x57 57x0]
     on-over[over-menu diag]
-	on-up [if msg diag [init "Diagonal"]]
-	
-	diam: base sky 58x58
+    on-up [if confirm diag [init "Diagonal"]]
+    
+    diam: base sky 58x58
     draw [line-width 2 pen snow fill-pen transparent polygon 0x29 29x0 58x29 29x58]
     on-over[over-menu diam]
-	on-up [if msg diam [init "Diamond"]]
+    on-up [if confirm diam [init "Diamond"]]
     
-	x: base sky 58x58
+    cross: base sky 58x58
     draw [line-width 2 pen snow line 0x0 57x57 0x57 57x0]
-    on-over[over-menu x]
-	on-up [if msg x [init "x"]]
+    on-over[over-menu cross]
+    on-up [if confirm cross [init "x"]]
     
-	frame: base sky 58x58
+    frame: base sky 58x58
     draw [line-width 2 pen snow fill-pen transparent polygon 5x5 52x5 52x52 5x52]
     on-over[over-menu frame]
-    on-up [if msg frame [init "Frame"]]
-	
-	about: base 219.200.128 58x58
+    on-up [if confirm frame [init "Border"]]
+    
+    info: base 219.200.128 58x58
     draw [font my-font text 18x5 "?"]
-    on-over[over-menu about]
+    on-over [over-menu info]
+    on-up [info-dlg]
 ]
