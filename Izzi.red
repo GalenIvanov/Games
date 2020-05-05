@@ -10,14 +10,16 @@ tiles: make block! 64
 tiles-block: make block! 64
 tiles-coords: make map! 64
 conditions: make map! 64
+coord: 0x0
 delta-offs: 0x0
 start-offs: 0
 drag: off
 selected: none
-scheme: [164.200.250.255 ivory]
 start-drag: 0 ; 0 if dragging started outside grid; 1 - inside grid
 end-drag: 0   ; 0 if dragging ended outside grid; 1 - inside grid
 prog: 0
+;scheme: [164.200.250.255 ivory]
+scheme: [aqua ivory]
 
 triangles: [
     [0x0 20x0 20x20]
@@ -40,16 +42,28 @@ TL: [1 2 7 8] ; top-left corner
 TR: [1 2 3 4] ; top-right corner
 
 my-font: make object! [
-        name: "Verdana"
-        size: 30
-        style: "bold"
-        angle: 0
-        color: snow
-        anti-alias?: true
-        shadow: none
-        state: none
-        parent: none
-    ]
+    name: "Verdana"
+    size: 30
+    style: none
+    angle: 0
+    color: snow
+    anti-alias?: true
+    shadow: none
+    state: none
+    parent: none
+]
+	
+about-font: make object! [
+    name: "Verdana"
+    size: 10
+    style: 'bold
+    angle: 0
+    color: black
+    anti-alias?: true
+    shadow: none
+    state: none
+    parent: none
+]	
 
 set-conditions: func [
     mode
@@ -63,7 +77,7 @@ set-conditions: func [
                 put conditions as-pair n * 40 + 360 8 - n * 40 + 40 RD
             ]
             append tiles-block compose [
-                line-width 2 pen (sky + 10)
+                line-width 2 pen (khaki + 10)
                 line 400x360 720x40
             ]
         ]
@@ -75,7 +89,7 @@ set-conditions: func [
                 put conditions as-pair n * 40 + 520 n * 40 LD
             ]
             append tiles-block compose [
-                line-width 2 pen (sky + 10) fill-pen transparent
+                line-width 2 pen (khaki + 10) fill-pen transparent
                 polygon 400x200 560x40 720x200 560x360
             ]
         ]
@@ -85,7 +99,7 @@ set-conditions: func [
                 put conditions as-pair n * 40 + 360 n * 40 LD
             ]
             append tiles-block compose [
-                line-width 2 pen (sky + 10)
+                line-width 2 pen (khaki + 10)
                 line 400x360 720x40
                 line 400x40 720x360
             ]
@@ -102,7 +116,7 @@ set-conditions: func [
                 put conditions as-pair 680 n * 40 + 40 V
             ]
             append tiles-block compose [
-                line-width 2 pen (sky + 20) fill-pen transparent
+                line-width 2 pen (khaki + 10) fill-pen transparent
                 polygon 420x60 700x60 700x340 420x340
             ]
         ]
@@ -136,7 +150,7 @@ make-tile: function [
         foreach t triangles [
             clr: pick scheme -47 + tiles/:n/:bit
             keep compose [
-                pen 255.240.120.255 fill-pen (clr)
+                pen transparent fill-pen (clr)
                 polygon (t/1 + offs) (t/2 + offs) (t/3 + offs)
             ]
             bit: bit + 1
@@ -148,8 +162,10 @@ arrange-tiles: has [
     n row col offs
 ][
     append tiles-block compose [
-        pen sky fill-pen (sky - 10)
+	    line-width 3
+        pen (khaki + 20) fill-pen (khaki - 10)
         box 400x40 720x360
+		line-width 1
     ]
     repeat n 9 [
         row: as-pair 400 40 * n
@@ -159,6 +175,16 @@ arrange-tiles: has [
             line (col) (col + 0x320)
         ]
     ]
+	
+	append tiles-block [
+        solved-frame: pen green
+        fill-pen transparent
+        box 0x0 0x0
+        marker: line-width 4
+        pen orange fill-pen transparent
+        box 0x0 0x0
+
+    ]
     n: 1
     repeat row 8 [
         repeat col 8 [
@@ -167,14 +193,6 @@ arrange-tiles: has [
             put tiles-coords offs n
             n: n + 1
         ]
-    ]
-    append tiles-block [
-        marker: line-width 3
-        pen orange fill-pen transparent
-        box 0x0 0x0
-        solved-frame: pen green
-        fill-pen transparent
-        box 0x0 0x0
     ]
 ]
 
@@ -231,7 +249,6 @@ update-coords: func [
 ]
 
 move-tile: func [offs][
-
     if all [offs/x > 760 offs/x < 810 none? selected][
         
     ]
@@ -252,10 +269,18 @@ move-tile: func [offs][
     ]
 ]
 
-start-move: func [offs][
+start-move: func [
+    offs
+    /local p t-id
+][
     if p: select tiles-coords coord [
+	    selected: p
+	    
+		t-id: to word! rejoin ["tile" selected]
+		move/part back get t-id tail tiles-block 65
+		;move/part find tiles-block t-id tail tiles-block 65
+		
         dragged: coord
-        selected: p
         start-offs: round/to offs - 20 40
         start-drag: either outside-grid? start-offs [0][1]
         delta-offs: offs - start-offs
@@ -337,16 +362,28 @@ rotate-tile: func [
 ]
 
 init: func [mode][
-   clear tiles-block
+   delta-offs: 0x0
+   start-offs: 0
+   coord: 0x0
+   drag: off
+   selected: none
+   start-drag: 0
+   end-drag: 0
+   prog: 0
+   
+   clear tiles
+   clear head tiles-block
    clear tiles-coords
-   clear conditions
+   
    gen-tiles
    random tiles
    arrange-tiles
    set-conditions mode
 ]
  
-over-menu: func [face][face/color: face/color xor 127.0.127]
+over-menu: func [face][
+    face/color: face/color xor 127.0.63
+]
 
 confirm: func [
     caller
@@ -371,7 +408,7 @@ info-dlg: does [
     info/enabled?: false
     view/flags [
         below
-        text {Izzi puzzle is designed by Frank Nichols and made in 1992
+        text font about-font {Izzi puzzle is designed by Frank Nichols and made in 1992
 by Binary Arts (now called ThinkFun).
 
 Put the tiles in the 8x8 grid so that the edges of each touching
@@ -392,13 +429,12 @@ Galen Ivanov, 2020
     info/enabled?: true
 ]
 
- 
 init "Basic"
 
 view compose [
     Title "Izzi puzzle"
     across
-    base (sky - 15) 760x400 draw tiles-block
+    base (khaki) 760x400 draw tiles-block
     all-over
     on-over  [move-tile event/offset]
     on-down  [start-move event/offset]
@@ -407,31 +443,31 @@ view compose [
     focus
     
     below
-    basic: base sky 58x58
+    basic: base aqua 58x58
     on-over[over-menu basic]
     on-up [if confirm basic [init "Basic"]]
     
-    diag: base sky 58x58
+    diag: base aqua 58x58
     draw [line-width 2 pen snow line 0x57 57x0]
     on-over[over-menu diag]
     on-up [if confirm diag [init "Diagonal"]]
     
-    diam: base sky 58x58
+    diam: base aqua 58x58
     draw [line-width 2 pen snow fill-pen transparent polygon 0x29 29x0 58x29 29x58]
     on-over[over-menu diam]
     on-up [if confirm diam [init "Diamond"]]
     
-    cross: base sky 58x58
+    cross: base aqua 58x58
     draw [line-width 2 pen snow line 0x0 57x57 0x57 57x0]
     on-over[over-menu cross]
     on-up [if confirm cross [init "x"]]
     
-    frame: base sky 58x58
+    frame: base aqua 58x58
     draw [line-width 2 pen snow fill-pen transparent polygon 5x5 52x5 52x52 5x52]
     on-over[over-menu frame]
     on-up [if confirm frame [init "Border"]]
     
-    info: base 219.200.128 58x58
+    info: base khaki 58x60  ;219.200.128
     draw [font my-font text 18x5 "?"]
     on-over [over-menu info]
     on-up [info-dlg]
